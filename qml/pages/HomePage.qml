@@ -37,7 +37,7 @@ Item {
                     spacing: 10
 
                     Label {
-                        text: "From raw notebook to desktop app"
+                        text: "Desktop workflow"
                         color: theme.accent
                         font.pixelSize: 12
                         font.bold: true
@@ -45,9 +45,9 @@ Item {
                     }
 
                     Label {
-                        text: "The workflow is now split into pages so it feels more like a proper desktop tool."
+                        text: "Use the menu bar or the page selector to move through the workflow."
                         color: theme.textPrimary
-                        font.pixelSize: 30
+                        font.pixelSize: 24
                         font.bold: true
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
@@ -57,7 +57,7 @@ Item {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         color: theme.textSecondary
-                        text: "Use Home to orient yourself, Data to load or generate points, and Results to review the final piecewise approximation and PLC code."
+                        text: "Load data, edit points, run the piecewise fit, and review PLC output from a cleaner desktop-style layout."
                     }
 
                     RowLayout {
@@ -66,13 +66,6 @@ Item {
 
                         AppButton {
                             theme: page.theme
-                            text: "Go to data"
-                            onClicked: page.navigateToPage(1)
-                        }
-
-                        AppButton {
-                            theme: page.theme
-                            primary: false
                             text: "Open CSV"
                             onClicked: page.openCsvDialog()
                         }
@@ -80,8 +73,18 @@ Item {
                         AppButton {
                             theme: page.theme
                             primary: false
-                            text: "View results"
-                            onClicked: page.navigateToPage(2)
+                            text: "Go to data"
+                            onClicked: page.navigateToPage(1)
+                        }
+
+                        AppButton {
+                            theme: page.theme
+                            primary: false
+                            text: "Generate sample"
+                            onClicked: {
+                                controller.generatePoints(0, 300, 6)
+                                page.navigateToPage(1)
+                            }
                         }
                     }
                 }

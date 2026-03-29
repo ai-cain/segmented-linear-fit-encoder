@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
@@ -13,10 +14,101 @@ ApplicationWindow {
     minimumWidth: 1180
     minimumHeight: 760
     visible: true
+    visibility: Window.Maximized
     title: "Piecewise Linear Fit Studio"
 
     property int currentPage: 0
     readonly property var controller: appController
+
+    menuBar: MenuBar {
+        Menu {
+            title: "&File"
+
+            MenuItem {
+                text: "Open CSV..."
+                onTriggered: window.openCsvDialog()
+            }
+
+            MenuSeparator { }
+
+            MenuItem {
+                text: "Clear points"
+                enabled: window.controller.hasPoints
+                onTriggered: window.controller.clearPoints()
+            }
+
+            MenuSeparator { }
+
+            MenuItem {
+                text: "Exit"
+                onTriggered: Qt.quit()
+            }
+        }
+
+        Menu {
+            title: "&Navigate"
+
+            MenuItem {
+                text: "Home"
+                onTriggered: window.currentPage = 0
+            }
+
+            MenuItem {
+                text: "Data"
+                onTriggered: window.currentPage = 1
+            }
+
+            MenuItem {
+                text: "Results"
+                onTriggered: window.currentPage = 2
+            }
+        }
+
+        Menu {
+            title: "&Actions"
+
+            Menu {
+                title: "Generate sample range"
+
+                MenuItem {
+                    text: "0 to 300 in 6 intervals"
+                    onTriggered: {
+                        window.controller.generatePoints(0, 300, 6)
+                        window.currentPage = 1
+                    }
+                }
+
+                MenuItem {
+                    text: "0 to 100 in 10 intervals"
+                    onTriggered: {
+                        window.controller.generatePoints(0, 100, 10)
+                        window.currentPage = 1
+                    }
+                }
+            }
+
+            MenuSeparator { }
+
+            MenuItem {
+                text: "Run analysis"
+                enabled: window.controller.hasPoints
+                onTriggered: {
+                    window.controller.runAnalysis()
+                    if (window.controller.hasResults)
+                        window.currentPage = 2
+                }
+            }
+        }
+
+        Menu {
+            title: "&Help"
+
+            MenuItem {
+                text: "About piecewise-linear-fit"
+                onTriggered: aboutDialog.open()
+            }
+        }
+    }
 
     QtObject {
         id: theme
@@ -79,6 +171,30 @@ ApplicationWindow {
         title: "Select a CSV file"
         nameFilters: ["CSV (*.csv)", "Text (*.txt)", "All files (*)"]
         onAccepted: window.controller.loadCsv(selectedFile)
+    }
+
+    Dialog {
+        id: aboutDialog
+        title: "About piecewise-linear-fit"
+        modal: true
+        standardButtons: Dialog.Ok
+        anchors.centerIn: parent
+        width: 440
+
+        contentItem: Label {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: "piecewise-linear-fit is a Qt 6 + C++ desktop tool for loading measured points, running piecewise linear analysis, and generating PLC-friendly output."
+            color: theme.textPrimary
+            padding: 16
+        }
+
+        background: Rectangle {
+            radius: 18
+            color: theme.panel
+            border.width: 1
+            border.color: theme.border
+        }
     }
 
     background: Rectangle {
@@ -156,13 +272,16 @@ ApplicationWindow {
                 }
 
                 Rectangle {
+                    id: navigationCard
                     Layout.fillWidth: true
+                    implicitHeight: navigationContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
+                        id: navigationContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 8
@@ -203,13 +322,16 @@ ApplicationWindow {
                 }
 
                 Rectangle {
+                    id: actionsCard
                     Layout.fillWidth: true
+                    implicitHeight: actionsContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
+                        id: actionsContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
@@ -231,21 +353,84 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             primary: false
-                            text: "Go to data"
-                            onClicked: window.currentPage = 1
+                            text: "Run analysis"
+                            enabled: window.controller.hasPoints
+                            onClicked: {
+                                window.controller.runAnalysis()
+                                if (window.controller.hasResults)
+                                    window.currentPage = 2
+                            }
                         }
 
                         AppButton {
                             Layout.fillWidth: true
                             theme: theme
                             primary: false
-                            text: "Go to results"
-                            onClicked: window.currentPage = 2
+                            text: "Generate sample"
+                            onClicked: {
+                                window.controller.generatePoints(0, 300, 6)
+                                window.currentPage = 1
+                            }
                         }
                     }
                 }
 
-                RowLayout {
+                Rectangle {
+                    id: pageSelectorCard
+                    Layout.fillWidth: true
+                    implicitHeight: pageSelectorContent.implicitHeight + 28
+                    radius: 18
+                    color: theme.panelAlt
+                    border.width: 1
+                    border.color: theme.border
+
+                    ColumnLayout {
+                        id: pageSelectorContent
+                        anchors.fill: parent
+                        anchors.margins: 14
+                        spacing: 10
+
+                        Label {
+                            text: "Page selector"
+                            color: theme.textPrimary
+                            font.bold: true
+                        }
+
+                        ComboBox {
+                            id: pageSelector
+                            Layout.fillWidth: true
+                            model: ["Home", "Data", "Results"]
+                            currentIndex: window.currentPage
+                            onActivated: window.currentPage = currentIndex
+
+                            contentItem: Text {
+                                leftPadding: 12
+                                rightPadding: 36
+                                text: pageSelector.displayText
+                                font.pixelSize: 14
+                                color: theme.textPrimary
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            background: Rectangle {
+                                radius: 12
+                                color: theme.field
+                                border.width: 1
+                                border.color: theme.fieldBorder
+                            }
+                        }
+
+                        AppButton {
+                            Layout.fillWidth: true
+                            theme: theme
+                            primary: false
+                            text: "Go to data"
+                            onClicked: window.currentPage = 1
+                        }
+                    }
+                }
+
+                ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 10
 
@@ -273,13 +458,16 @@ ApplicationWindow {
                 }
 
                 Rectangle {
+                    id: statusCard
                     Layout.fillWidth: true
+                    implicitHeight: statusContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
+                        id: statusContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
@@ -374,18 +562,42 @@ ApplicationWindow {
                                 spacing: 6
 
                                 Label {
-                                    text: "Current stack"
+                                    text: "Quick navigation"
                                     color: theme.textMuted
                                     font.pixelSize: 12
                                     font.bold: true
                                     font.capitalization: Font.AllUppercase
                                 }
 
+                                ComboBox {
+                                    id: headerPageSelector
+                                    Layout.fillWidth: true
+                                    model: ["Home", "Data", "Results"]
+                                    currentIndex: window.currentPage
+                                    onActivated: window.currentPage = currentIndex
+
+                                    contentItem: Text {
+                                        leftPadding: 12
+                                        rightPadding: 36
+                                        text: headerPageSelector.displayText
+                                        font.pixelSize: 14
+                                        color: theme.textPrimary
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 12
+                                        color: theme.panel
+                                        border.width: 1
+                                        border.color: theme.fieldBorder
+                                    }
+                                }
+
                                 Label {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
-                                    color: theme.textPrimary
-                                    text: "CMake + C++ + QML with a multi-page workflow."
+                                    color: theme.textSecondary
+                                    text: "Use the menu bar, the selector, or the sidebar to move through the workflow."
                                 }
                             }
                         }
