@@ -14,6 +14,7 @@ qt_policy(SET QTP0004 NEW)
 qt_add_executable(PiecewiseLinearFit
     src/main.cpp
     src/AppController.cpp
+    src/CodeExportService.cpp
     src/PointTableModel.cpp
     src/SegmentFitService.cpp
 )

@@ -15,25 +15,6 @@ struct RegressionResult
     bool valid = false;
 };
 
-QString formatNumber(double value, int decimals = 7)
-{
-    if (std::abs(value) < 1e-12) {
-        value = 0.0;
-    }
-
-    QString text = QString::number(value, 'f', decimals);
-    while (text.contains('.') && (text.endsWith('0') || text.endsWith('.'))) {
-        if (text.endsWith('.')) {
-            text.chop(1);
-            break;
-        }
-
-        text.chop(1);
-    }
-
-    return text;
-}
-
 RegressionResult linearRegression(const QVector<DataPoint> &points, int startIndex, int count)
 {
     RegressionResult result;
@@ -245,45 +226,4 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
     }
 
     return result;
-}
-
-QString SegmentFitService::buildPlcCode(const QVector<SegmentResult> &segments,
-                                        const QString &inputName,
-                                        const QString &outputName)
-{
-    if (segments.isEmpty()) {
-        return {};
-    }
-
-    QStringList lines;
-    for (int index = 0; index < segments.size(); ++index) {
-        const SegmentResult &segment = segments.at(index);
-        const QString keyword = index == 0 ? QStringLiteral("IF") : QStringLiteral("ELSIF");
-
-        if (index < segments.size() - 1) {
-            lines.append(QStringLiteral("%1 %2 >= %3 AND %2 < %4 THEN")
-                             .arg(keyword,
-                                  inputName,
-                                  formatNumber(segment.xStart, 6),
-                                  formatNumber(segment.xEnd, 6)));
-        } else {
-            lines.append(QStringLiteral("%1 %2 >= %3 THEN")
-                             .arg(keyword,
-                                  inputName,
-                                  formatNumber(segment.xStart, 6)));
-        }
-
-        lines.append(QStringLiteral("    %1 := %2 * %3 + %4;    // Tramo %5")
-                         .arg(outputName,
-                              formatNumber(segment.slope),
-                              inputName,
-                              formatNumber(segment.intercept),
-                              QString::number(index + 1)));
-    }
-
-    lines.append(QStringLiteral("ELSE"));
-    lines.append(QStringLiteral("    %1 := 0.0;").arg(outputName));
-    lines.append(QStringLiteral("END_IF"));
-
-    return lines.join(QLatin1Char('\n'));
 }

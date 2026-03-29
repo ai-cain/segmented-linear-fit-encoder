@@ -1,9 +1,12 @@
 #pragma once
 
 #include <QObject>
+#include <QStringList>
 #include <QVariantList>
+#include <QVector>
 
 #include "PointTableModel.h"
+#include "PointTypes.h"
 
 class AppController : public QObject
 {
@@ -22,6 +25,9 @@ class AppController : public QObject
     Q_PROPERTY(QVariantList segmentResidualSeries READ segmentResidualSeries NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentErrorOutlierSeries READ segmentErrorOutlierSeries NOTIFY resultsChanged)
     Q_PROPERTY(double reviewTolerance READ reviewTolerance NOTIFY resultsChanged)
+    Q_PROPERTY(QStringList exportTargets READ exportTargets CONSTANT)
+    Q_PROPERTY(QString exportTarget READ exportTarget WRITE setExportTarget NOTIFY exportTargetChanged)
+    Q_PROPERTY(QString exportCode READ exportCode NOTIFY resultsChanged NOTIFY exportTargetChanged)
     Q_PROPERTY(QString summaryText READ summaryText NOTIFY resultsChanged)
     Q_PROPERTY(QString plcCode READ plcCode NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentResults READ segmentResults NOTIFY resultsChanged)
@@ -43,6 +49,10 @@ public:
     QVariantList segmentResidualSeries() const;
     QVariantList segmentErrorOutlierSeries() const;
     double reviewTolerance() const;
+    QStringList exportTargets() const;
+    QString exportTarget() const;
+    void setExportTarget(const QString &target);
+    QString exportCode() const;
     QString summaryText() const;
     QString plcCode() const;
     QVariantList segmentResults() const;
@@ -53,11 +63,13 @@ public:
     Q_INVOKABLE void updatePointY(int row, const QString &value);
     Q_INVOKABLE void runAnalysis();
     Q_INVOKABLE bool copyPlcCode();
+    Q_INVOKABLE bool copyExportCode();
 
 signals:
     void statusMessageChanged();
     void pointsChanged();
     void resultsChanged();
+    void exportTargetChanged();
 
 private:
     void setStatus(const QString &message, const QString &tone);
@@ -75,4 +87,6 @@ private:
     QVariantList m_segmentErrorOutlierSeries;
     QVariantList m_segmentResults;
     double m_reviewTolerance = 0.0;
+    QVector<SegmentResult> m_segments;
+    QString m_exportTarget = QStringLiteral("PLC");
 };

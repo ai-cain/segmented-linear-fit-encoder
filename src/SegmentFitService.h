@@ -28,7 +28,4 @@ public:
     };
 
     static Result analyze(const QVector<DataPoint> &points, const Options &options = Options());
-    static QString buildPlcCode(const QVector<SegmentResult> &segments,
-                                const QString &inputName = QStringLiteral("IN_VALUE"),
-                                const QString &outputName = QStringLiteral("OUT_LONG"));
 };

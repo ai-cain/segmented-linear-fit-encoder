@@ -227,19 +227,106 @@ Item {
 
                             Label {
                                 Layout.fillWidth: true
-                                text: "PLC Code"
+                                text: "Code Export"
                                 color: theme.textPrimary
                                 font.pixelSize: 22
                                 font.bold: true
+                            }
+
+                            ComboBox {
+                                id: exportTargetBox
+                                Layout.preferredWidth: 160
+                                model: controller.exportTargets
+                                enabled: controller.hasResults
+                                currentIndex: Math.max(0, controller.exportTargets.indexOf(controller.exportTarget))
+                                onActivated: controller.setExportTarget(currentText)
+
+                                contentItem: Text {
+                                    leftPadding: 12
+                                    rightPadding: exportTargetBox.indicator.width + exportTargetBox.spacing
+                                    text: exportTargetBox.displayText
+                                    font.pixelSize: 14
+                                    color: theme.textPrimary
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                }
+
+                                indicator: Canvas {
+                                    x: exportTargetBox.width - width - 12
+                                    y: exportTargetBox.topPadding + (exportTargetBox.availableHeight - height) / 2
+                                    width: 12
+                                    height: 8
+                                    contextType: "2d"
+
+                                    onPaint: {
+                                        const ctx = getContext("2d")
+                                        ctx.reset()
+                                        ctx.moveTo(0, 0)
+                                        ctx.lineTo(width, 0)
+                                        ctx.lineTo(width / 2, height)
+                                        ctx.closePath()
+                                        ctx.fillStyle = theme.textSecondary
+                                        ctx.fill()
+                                    }
+                                }
+
+                                background: Rectangle {
+                                    radius: 12
+                                    color: theme.field
+                                    border.width: 1
+                                    border.color: theme.fieldBorder
+                                }
+
+                                popup: Popup {
+                                    y: exportTargetBox.height + 6
+                                    width: exportTargetBox.width
+                                    implicitHeight: Math.min(contentItem.implicitHeight + 8, 220)
+                                    padding: 4
+
+                                    contentItem: ListView {
+                                        clip: true
+                                        implicitHeight: contentHeight
+                                        model: exportTargetBox.popup.visible ? exportTargetBox.delegateModel : null
+                                        currentIndex: exportTargetBox.highlightedIndex
+                                        ScrollIndicator.vertical: ScrollIndicator { }
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 12
+                                        color: theme.panelAlt
+                                        border.width: 1
+                                        border.color: theme.border
+                                    }
+                                }
+
+                                delegate: ItemDelegate {
+                                    required property var modelData
+                                    required property int index
+                                    width: exportTargetBox.width - 8
+                                    text: modelData
+                                    highlighted: exportTargetBox.highlightedIndex === index
+
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: theme.textPrimary
+                                        font.pixelSize: 14
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 10
+                                        color: parent.highlighted ? "#15243a" : "transparent"
+                                    }
+                                }
                             }
 
                             AppButton {
                                 Layout.preferredWidth: 132
                                 theme: page.theme
                                 primary: false
-                                text: "Copy PLC"
+                                text: "Copy Code"
                                 enabled: controller.hasResults
-                                onClicked: controller.copyPlcCode()
+                                onClicked: controller.copyExportCode()
                             }
                         }
 
@@ -247,7 +334,7 @@ Item {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
-                            text: "Generated from the computed piecewise segments."
+                            text: "Generated from the computed piecewise segments for " + controller.exportTarget + "."
                         }
 
                         TextArea {
@@ -255,7 +342,7 @@ Item {
                             Layout.fillHeight: true
                             readOnly: true
                             wrapMode: TextArea.WrapAnywhere
-                            text: controller.plcCode
+                            text: controller.exportCode
                             color: theme.textPrimary
                             font.family: "Consolas"
                             font.pixelSize: 13

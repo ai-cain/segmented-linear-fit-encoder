@@ -1,5 +1,6 @@
 #include "AppController.h"
 
+#include "CodeExportService.h"
 #include "SegmentFitService.h"
 
 #include <QClipboard>
@@ -450,6 +451,37 @@ double AppController::reviewTolerance() const
     return m_reviewTolerance;
 }
 
+QStringList AppController::exportTargets() const
+{
+    return CodeExportService::exportTargets();
+}
+
+QString AppController::exportTarget() const
+{
+    return m_exportTarget;
+}
+
+void AppController::setExportTarget(const QString &target)
+{
+    const QString normalized = target.trimmed();
+    if (normalized.isEmpty()) {
+        return;
+    }
+
+    const QStringList targets = exportTargets();
+    if (!targets.contains(normalized) || m_exportTarget == normalized) {
+        return;
+    }
+
+    m_exportTarget = normalized;
+    emit exportTargetChanged();
+}
+
+QString AppController::exportCode() const
+{
+    return CodeExportService::buildCode(m_segments, m_exportTarget);
+}
+
 QString AppController::summaryText() const
 {
     return m_summaryText;
@@ -643,6 +675,7 @@ void AppController::runAnalysis()
     }
 
     m_segmentResults = segmentItems;
+    m_segments = result.segments;
     const double maxAbsY = maxAbsYValue(m_pointModel.points());
     m_reviewTolerance = 0.2 * maxAbsY / 100.0;
     m_segmentedPointSeries = buildSegmentedPointSeries(m_pointModel.points(), m_segmentResults);
@@ -653,7 +686,7 @@ void AppController::runAnalysis()
                                                          m_segmentResults,
                                                          &m_segmentErrorOutlierSeries,
                                                          maxAbsY);
-    m_plcCode = SegmentFitService::buildPlcCode(result.segments);
+    m_plcCode = CodeExportService::buildPlcCode(result.segments);
     m_summaryText = QStringLiteral("%1 points processed, %2 segments, abs. tolerance %3")
                         .arg(pointCount())
                         .arg(result.segments.size())
@@ -674,6 +707,25 @@ bool AppController::copyPlcCode()
     if (QClipboard *clipboard = QGuiApplication::clipboard()) {
         clipboard->setText(m_plcCode);
         setStatus(QStringLiteral("PLC code copied to the clipboard."), QStringLiteral("success"));
+        return true;
+    }
+
+    setStatus(QStringLiteral("Clipboard is not available on this system."), QStringLiteral("error"));
+    return false;
+}
+
+bool AppController::copyExportCode()
+{
+    const QString code = exportCode();
+    if (code.trimmed().isEmpty()) {
+        setStatus(QStringLiteral("No code is available to copy yet."), QStringLiteral("error"));
+        return false;
+    }
+
+    if (QClipboard *clipboard = QGuiApplication::clipboard()) {
+        clipboard->setText(code);
+        setStatus(QStringLiteral("%1 code copied to the clipboard.").arg(m_exportTarget),
+                  QStringLiteral("success"));
         return true;
     }
 
@@ -707,6 +759,7 @@ void AppController::invalidateResults()
     m_plcCode.clear();
     m_summaryText.clear();
     m_reviewTolerance = 0.0;
+    m_segments.clear();
 
     if (hadResults) {
         emit resultsChanged();
