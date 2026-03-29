@@ -47,13 +47,16 @@ Item {
         }
 
         Rectangle {
+            id: summaryCard
             Layout.fillWidth: true
+            implicitHeight: summaryCardContent.implicitHeight + 36
             radius: 22
             color: theme.panelAlt
             border.width: 1
             border.color: theme.border
 
             ColumnLayout {
+                id: summaryCardContent
                 anchors.fill: parent
                 anchors.margins: 18
                 spacing: 10
@@ -72,24 +75,6 @@ Item {
                     text: controller.hasResults
                           ? controller.summaryText
                           : "Run the analysis from the CSV or Manual page to generate piecewise segments."
-                }
-
-                RowLayout {
-                    spacing: 10
-
-                    AppButton {
-                        theme: page.theme
-                        primary: false
-                        text: "CSV page"
-                        onClicked: page.navigateToPage(0)
-                    }
-
-                    AppButton {
-                        theme: page.theme
-                        primary: false
-                        text: "Manual page"
-                        onClicked: page.navigateToPage(1)
-                    }
                 }
             }
         }

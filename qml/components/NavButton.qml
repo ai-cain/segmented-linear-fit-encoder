@@ -9,10 +9,11 @@ Button {
     property string subtitle: ""
     property bool selected: false
 
-    implicitHeight: 68
+    implicitHeight: Math.max(74, navContent.implicitHeight + 20)
     padding: 0
 
     contentItem: RowLayout {
+        id: navContent
         anchors.fill: parent
         anchors.leftMargin: 14
         anchors.rightMargin: 14

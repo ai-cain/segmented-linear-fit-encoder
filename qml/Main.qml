@@ -110,7 +110,7 @@ ApplicationWindow {
         spacing: 18
 
         Rectangle {
-            Layout.preferredWidth: 280
+            Layout.preferredWidth: 300
             Layout.fillHeight: true
             radius: 24
             color: theme.panel
@@ -150,13 +150,16 @@ ApplicationWindow {
                 }
 
                 Rectangle {
+                    id: pagesCard
                     Layout.fillWidth: true
+                    implicitHeight: pagesCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
+                        id: pagesCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 8
@@ -196,85 +199,21 @@ ApplicationWindow {
                     }
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    radius: 18
-                    color: theme.panelAlt
-                    border.width: 1
-                    border.color: theme.border
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
-
-                        Label {
-                            text: "Actions"
-                            color: theme.textPrimary
-                            font.bold: true
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: theme
-                            text: "Open CSV"
-                            onClicked: window.openCsvDialog()
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: theme
-                            primary: false
-                            text: "Run analysis"
-                            enabled: window.controller.hasPoints
-                            onClicked: {
-                                window.controller.runAnalysis()
-                                if (window.controller.hasResults)
-                                    window.currentPage = 2
-                            }
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: theme
-                            primary: false
-                            text: "Clear points"
-                            enabled: window.controller.hasPoints
-                            onClicked: window.controller.clearPoints()
-                        }
-                    }
-                }
-
-                MetricTile {
-                    Layout.fillWidth: true
-                    theme: theme
-                    label: "Points"
-                    value: String(window.controller.pointCount)
-                    note: window.controller.hasPoints ? "available in the table" : "no dataset loaded"
-                    accentColor: theme.accent
-                }
-
-                MetricTile {
-                    Layout.fillWidth: true
-                    theme: theme
-                    label: "Missing Y"
-                    value: String(window.controller.missingYCount)
-                    note: "values still to fill"
-                    accentColor: theme.info
-                }
-
                 Item {
                     Layout.fillHeight: true
                 }
 
                 Rectangle {
+                    id: statusCard
                     Layout.fillWidth: true
+                    implicitHeight: statusCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     ColumnLayout {
+                        id: statusCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 8
@@ -313,13 +252,14 @@ ApplicationWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 110
+                    implicitHeight: Math.max(126, headerRow.implicitHeight + 32)
                     radius: 22
                     color: theme.panelAlt
                     border.width: 1
                     border.color: theme.border
 
                     RowLayout {
+                        id: headerRow
                         anchors.fill: parent
                         anchors.margins: 16
                         spacing: 16
@@ -344,14 +284,17 @@ ApplicationWindow {
                         }
 
                         Rectangle {
+                            id: datasetCard
                             Layout.preferredWidth: 300
-                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignTop
+                            implicitHeight: datasetCardContent.implicitHeight + 24
                             radius: 18
                             color: theme.field
                             border.width: 1
                             border.color: theme.fieldBorder
 
                             ColumnLayout {
+                                id: datasetCardContent
                                 anchors.fill: parent
                                 anchors.margins: 12
                                 spacing: 6

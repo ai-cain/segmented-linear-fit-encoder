@@ -42,14 +42,16 @@ Item {
                 }
 
                 Rectangle {
+                    id: generateCard
                     Layout.fillWidth: true
+                    implicitHeight: generateCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.field
                     border.width: 1
                     border.color: theme.fieldBorder
-                    implicitHeight: 310
 
                     ColumnLayout {
+                        id: generateCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
@@ -78,6 +80,7 @@ Item {
                                 placeholderText: "0"
                                 color: theme.textPrimary
                                 selectByMouse: true
+                                validator: DoubleValidator { }
 
                                 background: Rectangle {
                                     radius: 12
@@ -99,6 +102,7 @@ Item {
                                 placeholderText: "300"
                                 color: theme.textPrimary
                                 selectByMouse: true
+                                validator: DoubleValidator { }
 
                                 background: Rectangle {
                                     radius: 12
@@ -120,6 +124,7 @@ Item {
                                 placeholderText: "6"
                                 color: theme.textPrimary
                                 selectByMouse: true
+                                validator: IntValidator { bottom: 1 }
 
                                 background: Rectangle {
                                     radius: 12
@@ -149,57 +154,19 @@ Item {
                 }
 
                 Rectangle {
+                    id: manualDatasetCard
                     Layout.fillWidth: true
+                    implicitHeight: manualDatasetCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.field
                     border.width: 1
                     border.color: theme.fieldBorder
 
                     ColumnLayout {
+                        id: manualDatasetCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
-
-                        Label {
-                            text: "Actions"
-                            color: theme.textPrimary
-                            font.bold: true
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: page.theme
-                            text: "Analyze"
-                            enabled: controller.hasPoints
-                            onClicked: {
-                                controller.runAnalysis()
-                                if (controller.hasResults)
-                                    page.navigateToPage(2)
-                            }
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: page.theme
-                            primary: false
-                            text: "Clear"
-                            enabled: controller.hasPoints
-                            onClicked: controller.clearPoints()
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    radius: 18
-                    color: theme.field
-                    border.width: 1
-                    border.color: theme.fieldBorder
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 8
 
                         Label {
                             text: "Dataset"
@@ -214,6 +181,32 @@ Item {
                             text: controller.hasPoints
                                   ? controller.pointCount + " points available, " + controller.missingYCount + " Y values missing."
                                   : "No manual range generated yet."
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            AppButton {
+                                Layout.fillWidth: true
+                                theme: page.theme
+                                text: "Analyze"
+                                enabled: controller.hasPoints
+                                onClicked: {
+                                    controller.runAnalysis()
+                                    if (controller.hasResults)
+                                        page.navigateToPage(2)
+                                }
+                            }
+
+                            AppButton {
+                                Layout.fillWidth: true
+                                theme: page.theme
+                                primary: false
+                                text: "Clear"
+                                enabled: controller.hasPoints
+                                onClicked: controller.clearPoints()
+                            }
                         }
                     }
                 }

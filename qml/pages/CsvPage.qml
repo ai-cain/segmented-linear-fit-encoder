@@ -43,14 +43,16 @@ Item {
                 }
 
                 Rectangle {
+                    id: importCard
                     Layout.fillWidth: true
+                    implicitHeight: importCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.field
                     border.width: 1
                     border.color: theme.fieldBorder
-                    implicitHeight: 190
 
                     ColumnLayout {
+                        id: importCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
@@ -78,57 +80,19 @@ Item {
                 }
 
                 Rectangle {
+                    id: datasetCard
                     Layout.fillWidth: true
+                    implicitHeight: datasetCardContent.implicitHeight + 28
                     radius: 18
                     color: theme.field
                     border.width: 1
                     border.color: theme.fieldBorder
 
                     ColumnLayout {
+                        id: datasetCardContent
                         anchors.fill: parent
                         anchors.margins: 14
                         spacing: 10
-
-                        Label {
-                            text: "Actions"
-                            color: theme.textPrimary
-                            font.bold: true
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: page.theme
-                            text: "Analyze"
-                            enabled: controller.hasPoints
-                            onClicked: {
-                                controller.runAnalysis()
-                                if (controller.hasResults)
-                                    page.navigateToPage(2)
-                            }
-                        }
-
-                        AppButton {
-                            Layout.fillWidth: true
-                            theme: page.theme
-                            primary: false
-                            text: "Clear"
-                            enabled: controller.hasPoints
-                            onClicked: controller.clearPoints()
-                        }
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    radius: 18
-                    color: theme.field
-                    border.width: 1
-                    border.color: theme.fieldBorder
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 8
 
                         Label {
                             text: "Dataset"
@@ -143,6 +107,32 @@ Item {
                             text: controller.hasPoints
                                   ? controller.pointCount + " points loaded, " + controller.missingYCount + " Y values missing."
                                   : "No CSV loaded yet."
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            AppButton {
+                                Layout.fillWidth: true
+                                theme: page.theme
+                                text: "Analyze"
+                                enabled: controller.hasPoints
+                                onClicked: {
+                                    controller.runAnalysis()
+                                    if (controller.hasResults)
+                                        page.navigateToPage(2)
+                                }
+                            }
+
+                            AppButton {
+                                Layout.fillWidth: true
+                                theme: page.theme
+                                primary: false
+                                text: "Clear"
+                                enabled: controller.hasPoints
+                                onClicked: controller.clearPoints()
+                            }
                         }
                     }
                 }
