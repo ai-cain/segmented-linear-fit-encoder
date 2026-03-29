@@ -37,7 +37,7 @@ Item {
                     spacing: 10
 
                     Label {
-                        text: "De notebook crudo a app desktop"
+                        text: "From raw notebook to desktop app"
                         color: theme.accent
                         font.pixelSize: 12
                         font.bold: true
@@ -45,7 +45,7 @@ Item {
                     }
 
                     Label {
-                        text: "Ahora el flujo esta dividido por paginas para que se sienta mas como herramienta de escritorio."
+                        text: "The workflow is now split into pages so it feels more like a proper desktop tool."
                         color: theme.textPrimary
                         font.pixelSize: 30
                         font.bold: true
@@ -57,7 +57,7 @@ Item {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         color: theme.textSecondary
-                        text: "Usa Inicio para orientarte, Datos para cargar o generar puntos, y Resultados para revisar la aproximacion final por tramos y el codigo PLC."
+                        text: "Use Home to orient yourself, Data to load or generate points, and Results to review the final piecewise approximation and PLC code."
                     }
 
                     RowLayout {
@@ -66,21 +66,21 @@ Item {
 
                         AppButton {
                             theme: page.theme
-                            text: "Ir a datos"
+                            text: "Go to data"
                             onClicked: page.navigateToPage(1)
                         }
 
                         AppButton {
                             theme: page.theme
                             primary: false
-                            text: "Abrir CSV"
+                            text: "Open CSV"
                             onClicked: page.openCsvDialog()
                         }
 
                         AppButton {
                             theme: page.theme
                             primary: false
-                            text: "Ver resultados"
+                            text: "View results"
                             onClicked: page.navigateToPage(2)
                         }
                     }
@@ -94,27 +94,27 @@ Item {
                 MetricTile {
                     Layout.fillWidth: true
                     theme: page.theme
-                    label: "Puntos"
+                    label: "Points"
                     value: String(controller.pointCount)
-                    note: controller.hasPoints ? "listos para editar" : "sin cargar todavia"
+                    note: controller.hasPoints ? "ready to edit" : "not loaded yet"
                     accentColor: theme.accent
                 }
 
                 MetricTile {
                     Layout.fillWidth: true
                     theme: page.theme
-                    label: "Pendientes"
+                    label: "Missing"
                     value: String(controller.missingYCount)
-                    note: "valores Y por completar"
+                    note: "Y values still missing"
                     accentColor: theme.info
                 }
 
                 MetricTile {
                     Layout.fillWidth: true
                     theme: page.theme
-                    label: "Segmentos"
+                    label: "Segments"
                     value: String(controller.segmentResults.length)
-                    note: controller.hasResults ? "calculados" : "sin analisis"
+                    note: controller.hasResults ? "calculated" : "no analysis yet"
                     accentColor: theme.success
                 }
             }
@@ -141,7 +141,7 @@ Item {
                         spacing: 10
 
                         Label {
-                            text: "Entradas soportadas"
+                            text: "Supported inputs"
                             color: theme.textPrimary
                             font.pixelSize: 22
                             font.bold: true
@@ -151,14 +151,14 @@ Item {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
-                            text: "1. CSV con dos columnas numericas. 2. Rango manual usando minimo, maximo e intervalos para repartir puntos y luego llenar Y."
+                            text: "1. CSV with two numeric columns. 2. Manual range using minimum, maximum, and intervals to distribute points and then fill in Y."
                         }
 
                         Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
-                            text: "El notebook original se mantiene como referencia en files/segmented_linear_fit.ipynb."
+                            text: "The original notebook is still kept as a reference in files/segmented_linear_fit.ipynb."
                         }
                     }
                 }
@@ -179,7 +179,7 @@ Item {
                         spacing: 10
 
                         Label {
-                            text: "Por que por tramos"
+                            text: "Why piecewise"
                             color: theme.textPrimary
                             font.pixelSize: 22
                             font.bold: true
@@ -189,14 +189,14 @@ Item {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
-                            text: "Cuando una sola recta no representa bien la curva, el analisis parte la relacion en segmentos consecutivos y calcula una recta distinta para cada rango."
+                            text: "When a single straight line does not represent the curve well enough, the analysis splits the relationship into consecutive segments and computes a different line for each range."
                         }
 
                         Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
-                            text: "Eso deja una salida mucho mas util para PLC o logica embebida: IF / ELSIF por rangos con ecuaciones simples."
+                            text: "That produces a much more useful output for PLC or embedded logic: IF / ELSIF ranges with simple equations."
                         }
                     }
                 }
@@ -218,7 +218,7 @@ Item {
                     spacing: 14
 
                     Label {
-                        text: "Flujo recomendado"
+                        text: "Recommended flow"
                         color: theme.textPrimary
                         font.pixelSize: 22
                         font.bold: true
@@ -226,10 +226,10 @@ Item {
 
                     Repeater {
                         model: [
-                            "1. Ve a Datos y carga un CSV o genera el rango manual.",
-                            "2. Completa los valores Y faltantes en la tabla editable.",
-                            "3. Ejecuta el analisis y revisa el resumen de segmentos.",
-                            "4. Abre Resultados y copia o adapta el bloque PLC."
+                            "1. Go to Data and load a CSV or generate the manual range.",
+                            "2. Fill in the missing Y values in the editable table.",
+                            "3. Run the analysis and review the segment summary.",
+                            "4. Open Results and copy or adapt the PLC block."
                         ]
 
                         delegate: Rectangle {

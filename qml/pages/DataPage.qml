@@ -30,7 +30,7 @@ Item {
                 spacing: 14
 
                 Label {
-                    text: "Origen de datos"
+                    text: "Data source"
                     color: theme.textPrimary
                     font.pixelSize: 22
                     font.bold: true
@@ -40,7 +40,7 @@ Item {
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     color: theme.textSecondary
-                    text: "Escoge CSV si ya tienes mediciones. Escoge Manual si quieres repartir el rango y escribir Y al costado."
+                    text: "Choose CSV if you already have measured data. Choose Manual if you want to split the range and enter Y values alongside the generated X values."
                 }
 
                 RowLayout {
@@ -81,7 +81,7 @@ Item {
                             spacing: 10
 
                             Label {
-                                text: "Importar CSV"
+                                text: "Import CSV"
                                 color: theme.textPrimary
                                 font.bold: true
                             }
@@ -90,13 +90,13 @@ Item {
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                                 color: theme.textSecondary
-                                text: "La app toma las dos primeras columnas numericas del archivo como X e Y. En files/ tienes CSV de ejemplo."
+                                text: "The app reads the first two numeric columns in the file as X and Y. Sample CSV files are available in files/."
                             }
 
                             AppButton {
                                 Layout.fillWidth: true
                                 theme: page.theme
-                                text: "Seleccionar archivo"
+                                text: "Select file"
                                 onClicked: page.openCsvDialog()
                             }
                         }
@@ -115,7 +115,7 @@ Item {
                             spacing: 10
 
                             Label {
-                                text: "Generar rango"
+                                text: "Generate range"
                                 color: theme.textPrimary
                                 font.bold: true
                             }
@@ -127,7 +127,7 @@ Item {
                                 rowSpacing: 10
 
                                 Label {
-                                    text: "Minimo"
+                                    text: "Minimum"
                                     color: theme.textSecondary
                                 }
 
@@ -146,7 +146,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: "Maximo"
+                                    text: "Maximum"
                                     color: theme.textSecondary
                                 }
 
@@ -165,7 +165,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: "Intervalos"
+                                    text: "Intervals"
                                     color: theme.textSecondary
                                 }
 
@@ -201,13 +201,13 @@ Item {
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                                 color: theme.textSecondary
-                                text: "Ejemplo: minimo 0, maximo 300, intervalos 6 genera 7 puntos: 0, 50, 100, 150, 200, 250, 300."
+                                text: "Example: minimum 0, maximum 300, intervals 6 generates 7 points: 0, 50, 100, 150, 200, 250, 300."
                             }
 
                             AppButton {
                                 Layout.fillWidth: true
                                 theme: page.theme
-                                text: "Generar puntos"
+                                text: "Generate points"
                                 onClicked: controller.generatePoints(parseFloat(minimumField.text),
                                                                      parseFloat(maximumField.text),
                                                                      intervalBox.value)
@@ -229,7 +229,7 @@ Item {
                         spacing: 10
 
                         Label {
-                            text: "Acciones"
+                            text: "Actions"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -237,7 +237,7 @@ Item {
                         AppButton {
                             Layout.fillWidth: true
                             theme: page.theme
-                            text: "Analizar y abrir resultados"
+                            text: "Analyze and open results"
                             enabled: controller.hasPoints
                             onClicked: {
                                 controller.runAnalysis()
@@ -250,7 +250,7 @@ Item {
                             Layout.fillWidth: true
                             theme: page.theme
                             primary: false
-                            text: "Limpiar puntos"
+                            text: "Clear points"
                             enabled: controller.hasPoints
                             onClicked: controller.clearPoints()
                         }
@@ -270,7 +270,7 @@ Item {
                         spacing: 8
 
                         Label {
-                            text: "Estado de la tabla"
+                            text: "Table status"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -280,8 +280,8 @@ Item {
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
                             text: controller.hasPoints
-                                  ? controller.pointCount + " puntos, " + controller.missingYCount + " valores Y pendientes."
-                                  : "Todavia no hay puntos cargados."
+                                  ? controller.pointCount + " points, " + controller.missingYCount + " Y values still missing."
+                                  : "No points loaded yet."
                         }
                     }
                 }
@@ -306,7 +306,7 @@ Item {
                 spacing: 12
 
                 Label {
-                    text: "Tabla de puntos"
+                    text: "Points table"
                     color: theme.textPrimary
                     font.pixelSize: 22
                     font.bold: true
@@ -316,7 +316,7 @@ Item {
                     Layout.fillWidth: true
                     wrapMode: Text.WordWrap
                     color: theme.textSecondary
-                    text: "X se muestra fijo. Y se puede editar en cada fila antes de correr el segmented fit."
+                    text: "X is fixed. Y can be edited row by row before running the piecewise fit."
                 }
 
                 Rectangle {
@@ -424,7 +424,7 @@ Item {
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
                                     text: pointRow.displayY
-                                    placeholderText: "Ingresa Y"
+                                    placeholderText: "Enter Y"
                                     color: theme.textPrimary
                                     selectByMouse: true
                                     onEditingFinished: controller.updatePointY(pointRow.index, text)

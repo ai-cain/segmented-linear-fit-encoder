@@ -126,7 +126,7 @@ bool PointTableModel::setYValue(int row, const QString &text, QString *errorMess
 {
     if (row < 0 || row >= m_points.size()) {
         if (errorMessage) {
-            *errorMessage = QStringLiteral("La fila solicitada no existe.");
+            *errorMessage = QStringLiteral("The requested row does not exist.");
         }
         return false;
     }
@@ -138,7 +138,7 @@ bool PointTableModel::setYValue(int row, const QString &text, QString *errorMess
         double parsedValue = 0.0;
         if (!parseNumber(trimmed, parsedValue)) {
             if (errorMessage) {
-                *errorMessage = QStringLiteral("Ingresa un numero valido para Y.");
+                *errorMessage = QStringLiteral("Enter a valid numeric Y value.");
             }
             return false;
         }

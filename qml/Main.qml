@@ -51,11 +51,11 @@ ApplicationWindow {
     function pageTitle(index) {
         switch (index) {
         case 0:
-            return "Inicio"
+            return "Home"
         case 1:
-            return "Datos"
+            return "Data"
         case 2:
-            return "Resultados"
+            return "Results"
         default:
             return "Piecewise Linear Fit Studio"
         }
@@ -64,11 +64,11 @@ ApplicationWindow {
     function pageDescription(index) {
         switch (index) {
         case 0:
-            return "Vista general del flujo, accesos rapidos y estado actual de la app."
+            return "Workflow overview, quick actions, and current application status."
         case 1:
-            return "Carga CSV o genera un rango manual, completa Y y prepara el analisis."
+            return "Load a CSV or generate a manual range, fill in Y values, and prepare the analysis."
         case 2:
-            return "Revisa los tramos calculados, el resumen y el bloque PLC final."
+            return "Review the computed segments, the summary, and the final PLC block."
         default:
             return ""
         }
@@ -76,7 +76,7 @@ ApplicationWindow {
 
     FileDialog {
         id: csvDialog
-        title: "Selecciona un CSV"
+        title: "Select a CSV file"
         nameFilters: ["CSV (*.csv)", "Text (*.txt)", "All files (*)"]
         onAccepted: window.controller.loadCsv(selectedFile)
     }
@@ -133,7 +133,7 @@ ApplicationWindow {
                     spacing: 6
 
                     Label {
-                        text: "Segmented"
+                        text: "PIECEWISE"
                         color: theme.accent
                         font.pixelSize: 12
                         font.bold: true
@@ -151,7 +151,7 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         color: theme.textSecondary
-                        text: "Aplicacion desktop en C++/Qt para convertir puntos crudos en una funcion lineal por tramos."
+                        text: "C++/Qt desktop app for turning raw points into a piecewise linear function."
                     }
                 }
 
@@ -168,7 +168,7 @@ ApplicationWindow {
                         spacing: 8
 
                         Label {
-                            text: "Navegacion"
+                            text: "Navigation"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -176,8 +176,8 @@ ApplicationWindow {
                         NavButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Inicio"
-                            subtitle: "Resumen y arranque"
+                            text: "Home"
+                            subtitle: "Overview and quick start"
                             selected: window.currentPage === 0
                             onClicked: window.currentPage = 0
                         }
@@ -185,8 +185,8 @@ ApplicationWindow {
                         NavButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Datos"
-                            subtitle: "CSV, rango y tabla"
+                            text: "Data"
+                            subtitle: "CSV, range, and table"
                             selected: window.currentPage === 1
                             onClicked: window.currentPage = 1
                         }
@@ -194,8 +194,8 @@ ApplicationWindow {
                         NavButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Resultados"
-                            subtitle: "Tramos y PLC"
+                            text: "Results"
+                            subtitle: "Segments and PLC"
                             selected: window.currentPage === 2
                             onClicked: window.currentPage = 2
                         }
@@ -215,7 +215,7 @@ ApplicationWindow {
                         spacing: 10
 
                         Label {
-                            text: "Acciones rapidas"
+                            text: "Quick actions"
                             color: theme.textPrimary
                             font.bold: true
                         }
@@ -223,7 +223,7 @@ ApplicationWindow {
                         AppButton {
                             Layout.fillWidth: true
                             theme: theme
-                            text: "Abrir CSV"
+                            text: "Open CSV"
                             onClicked: window.openCsvDialog()
                         }
 
@@ -231,7 +231,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             primary: false
-                            text: "Ir a datos"
+                            text: "Go to data"
                             onClicked: window.currentPage = 1
                         }
 
@@ -239,7 +239,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             primary: false
-                            text: "Ir a resultados"
+                            text: "Go to results"
                             onClicked: window.currentPage = 2
                         }
                     }
@@ -252,18 +252,18 @@ ApplicationWindow {
                     MetricTile {
                         Layout.fillWidth: true
                         theme: theme
-                        label: "Puntos"
+                        label: "Points"
                         value: String(window.controller.pointCount)
-                        note: window.controller.hasPoints ? "cargados" : "sin datos"
+                        note: window.controller.hasPoints ? "loaded" : "no data"
                         accentColor: theme.accent
                     }
 
                     MetricTile {
                         Layout.fillWidth: true
                         theme: theme
-                        label: "Y faltantes"
+                        label: "Missing Y"
                         value: String(window.controller.missingYCount)
-                        note: "por completar"
+                        note: "still to fill"
                         accentColor: theme.info
                     }
                 }
@@ -296,7 +296,7 @@ ApplicationWindow {
                             }
 
                             Label {
-                                text: "Estado actual"
+                                text: "Current status"
                                 color: theme.textPrimary
                                 font.bold: true
                             }
@@ -308,7 +308,7 @@ ApplicationWindow {
                             color: theme.textSecondary
                             text: window.controller.statusMessage.length > 0
                                   ? window.controller.statusMessage
-                                  : "La app esta lista para trabajar con CSV o modo manual."
+                                  : "The app is ready to work with CSV or manual mode."
                         }
                     }
                 }
@@ -374,7 +374,7 @@ ApplicationWindow {
                                 spacing: 6
 
                                 Label {
-                                    text: "Ruta activa"
+                                    text: "Current stack"
                                     color: theme.textMuted
                                     font.pixelSize: 12
                                     font.bold: true
@@ -385,7 +385,7 @@ ApplicationWindow {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                     color: theme.textPrimary
-                                    text: "CMake + C++ + QML con flujo separado en paginas."
+                                    text: "CMake + C++ + QML with a multi-page workflow."
                                 }
                             }
                         }

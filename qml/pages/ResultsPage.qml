@@ -21,27 +21,27 @@ Item {
             MetricTile {
                 Layout.fillWidth: true
                 theme: page.theme
-                label: "Puntos"
+                label: "Points"
                 value: String(controller.pointCount)
-                note: "procesados"
+                note: "processed"
                 accentColor: theme.accent
             }
 
             MetricTile {
                 Layout.fillWidth: true
                 theme: page.theme
-                label: "Segmentos"
+                label: "Segments"
                 value: String(controller.segmentResults.length)
-                note: controller.hasResults ? "en la solucion" : "sin calcular"
+                note: controller.hasResults ? "in the solution" : "not calculated"
                 accentColor: theme.success
             }
 
             MetricTile {
                 Layout.fillWidth: true
                 theme: page.theme
-                label: "Pendientes"
+                label: "Missing"
                 value: String(controller.missingYCount)
-                note: "valores Y faltantes"
+                note: "Y values still missing"
                 accentColor: theme.info
             }
         }
@@ -59,7 +59,7 @@ Item {
                 spacing: 10
 
                 Label {
-                    text: "Resumen"
+                    text: "Summary"
                     color: theme.textPrimary
                     font.pixelSize: 22
                     font.bold: true
@@ -71,13 +71,13 @@ Item {
                     color: theme.textSecondary
                     text: controller.hasResults
                           ? controller.summaryText
-                          : "Aun no hay resultados. Ve a Datos, completa la tabla y ejecuta el analisis."
+                          : "There are no results yet. Go to Data, complete the table, and run the analysis."
                 }
 
                 AppButton {
                     theme: page.theme
                     primary: false
-                    text: "Volver a datos"
+                    text: "Back to data"
                     onClicked: page.navigateToPage(1)
                 }
             }
@@ -109,7 +109,7 @@ Item {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: "Todavia no existe un analisis para mostrar."
+                    text: "There is no analysis to show yet."
                     color: theme.textPrimary
                     font.pixelSize: 28
                     font.bold: true
@@ -119,14 +119,14 @@ Item {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: "Cuando termines de cargar o escribir los puntos, corre el analisis desde la pagina Datos."
+                    text: "Once you finish loading or entering points, run the analysis from the Data page."
                     color: theme.textSecondary
                 }
 
                 AppButton {
                     Layout.alignment: Qt.AlignHCenter
                     theme: page.theme
-                    text: "Ir a datos"
+                    text: "Go to data"
                     onClicked: page.navigateToPage(1)
                 }
             }
@@ -153,7 +153,7 @@ Item {
                     spacing: 12
 
                     Label {
-                        text: "Tramos encontrados"
+                        text: "Computed segments"
                         color: theme.textPrimary
                         font.pixelSize: 22
                         font.bold: true
@@ -241,7 +241,7 @@ Item {
                     spacing: 12
 
                     Label {
-                        text: "Codigo PLC"
+                        text: "PLC code"
                         color: theme.textPrimary
                         font.pixelSize: 22
                         font.bold: true
@@ -251,7 +251,7 @@ Item {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                         color: theme.textSecondary
-                        text: "Bloque generado automaticamente a partir de los segmentos encontrados."
+                        text: "Automatically generated block based on the computed segments."
                     }
 
                     TextArea {

@@ -186,12 +186,12 @@ void AppController::loadCsv(const QString &source)
     const QString filePath = normalizePath(source);
     QFile file(filePath);
     if (!file.exists()) {
-        setStatus(QStringLiteral("No se encontro el archivo seleccionado."), QStringLiteral("error"));
+        setStatus(QStringLiteral("The selected file was not found."), QStringLiteral("error"));
         return;
     }
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        setStatus(QStringLiteral("No se pudo abrir el CSV."), QStringLiteral("error"));
+        setStatus(QStringLiteral("Could not open the CSV file."), QStringLiteral("error"));
         return;
     }
 
@@ -202,7 +202,7 @@ void AppController::loadCsv(const QString &source)
     const QStringList rawLines = content.split(QRegularExpression(QStringLiteral("\\r\\n|\\n|\\r")),
                                                Qt::SkipEmptyParts);
     if (rawLines.isEmpty()) {
-        setStatus(QStringLiteral("El CSV esta vacio."), QStringLiteral("error"));
+        setStatus(QStringLiteral("The CSV file is empty."), QStringLiteral("error"));
         return;
     }
 
@@ -219,7 +219,7 @@ void AppController::loadCsv(const QString &source)
 
         const QStringList fields = splitCsvRow(line, delimiter);
         if (fields.size() < 2) {
-            setStatus(QStringLiteral("La fila %1 no tiene al menos dos columnas.")
+            setStatus(QStringLiteral("Row %1 does not contain at least two columns.")
                           .arg(lineIndex + 1),
                       QStringLiteral("error"));
             return;
@@ -236,7 +236,7 @@ void AppController::loadCsv(const QString &source)
         }
 
         if (!xOk || !yOk) {
-            setStatus(QStringLiteral("La fila %1 contiene valores no numericos en las dos primeras columnas.")
+            setStatus(QStringLiteral("Row %1 contains non-numeric values in the first two columns.")
                           .arg(lineIndex + 1),
                       QStringLiteral("error"));
             return;
@@ -246,7 +246,7 @@ void AppController::loadCsv(const QString &source)
     }
 
     if (points.isEmpty()) {
-        setStatus(QStringLiteral("No se encontraron puntos validos en el CSV."), QStringLiteral("error"));
+        setStatus(QStringLiteral("No valid points were found in the CSV file."), QStringLiteral("error"));
         return;
     }
 
@@ -254,24 +254,24 @@ void AppController::loadCsv(const QString &source)
     invalidateResults();
 
     const QString fileName = QFileInfo(filePath).fileName();
-    setStatus(QStringLiteral("CSV cargado: %1 (%2 puntos).").arg(fileName).arg(points.size()),
+    setStatus(QStringLiteral("CSV loaded: %1 (%2 points).").arg(fileName).arg(points.size()),
               QStringLiteral("success"));
 }
 
 void AppController::generatePoints(double minimum, double maximum, int intervals)
 {
     if (!std::isfinite(minimum) || !std::isfinite(maximum)) {
-        setStatus(QStringLiteral("Minimo y maximo deben ser numeros validos."), QStringLiteral("error"));
+        setStatus(QStringLiteral("Minimum and maximum must be valid numbers."), QStringLiteral("error"));
         return;
     }
 
     if (maximum <= minimum) {
-        setStatus(QStringLiteral("El valor maximo debe ser mayor que el minimo."), QStringLiteral("error"));
+        setStatus(QStringLiteral("Maximum must be greater than minimum."), QStringLiteral("error"));
         return;
     }
 
     if (intervals < 1) {
-        setStatus(QStringLiteral("La cantidad de intervalos debe ser al menos 1."), QStringLiteral("error"));
+        setStatus(QStringLiteral("Intervals must be at least 1."), QStringLiteral("error"));
         return;
     }
 
@@ -287,7 +287,7 @@ void AppController::generatePoints(double minimum, double maximum, int intervals
     m_pointModel.setPoints(points);
     invalidateResults();
 
-    setStatus(QStringLiteral("Se generaron %1 puntos entre %2 y %3.")
+    setStatus(QStringLiteral("Generated %1 points between %2 and %3.")
                   .arg(points.size())
                   .arg(formatNumber(minimum, 4))
                   .arg(formatNumber(maximum, 4)),
@@ -298,7 +298,7 @@ void AppController::clearPoints()
 {
     m_pointModel.clear();
     invalidateResults();
-    setStatus(QStringLiteral("Se limpiaron los puntos actuales."), QStringLiteral("neutral"));
+    setStatus(QStringLiteral("Current points were cleared."), QStringLiteral("neutral"));
 }
 
 void AppController::updatePointY(int row, const QString &value)
@@ -310,20 +310,20 @@ void AppController::updatePointY(int row, const QString &value)
     }
 
     if (!value.trimmed().isEmpty()) {
-        setStatus(QStringLiteral("Valor Y actualizado."), QStringLiteral("neutral"));
+        setStatus(QStringLiteral("Y value updated."), QStringLiteral("neutral"));
     }
 }
 
 void AppController::runAnalysis()
 {
     if (!hasPoints()) {
-        setStatus(QStringLiteral("Primero carga un CSV o genera puntos."), QStringLiteral("error"));
+        setStatus(QStringLiteral("Load a CSV or generate points first."), QStringLiteral("error"));
         return;
     }
 
     const int missingValues = missingYCount();
     if (missingValues > 0) {
-        setStatus(QStringLiteral("Faltan %1 valores Y por completar antes del analisis.").arg(missingValues),
+        setStatus(QStringLiteral("%1 Y values are still missing before analysis.").arg(missingValues),
                   QStringLiteral("error"));
         return;
     }
@@ -340,7 +340,7 @@ void AppController::runAnalysis()
     for (int index = 0; index < result.segments.size(); ++index) {
         const SegmentResult &segment = result.segments.at(index);
         QVariantMap item;
-        item.insert(QStringLiteral("title"), QStringLiteral("Tramo %1").arg(index + 1));
+        item.insert(QStringLiteral("title"), QStringLiteral("Segment %1").arg(index + 1));
         item.insert(QStringLiteral("range"),
                     QStringLiteral("%1 -> %2")
                         .arg(formatNumber(segment.xStart, 4), formatNumber(segment.xEnd, 4)));
@@ -354,13 +354,13 @@ void AppController::runAnalysis()
 
     m_segmentResults = segmentItems;
     m_plcCode = SegmentFitService::buildPlcCode(result.segments);
-    m_summaryText = QStringLiteral("%1 puntos procesados, %2 segmentos, tolerancia abs. %3")
+    m_summaryText = QStringLiteral("%1 points processed, %2 segments, abs. tolerance %3")
                         .arg(pointCount())
                         .arg(result.segments.size())
                         .arg(formatNumber(result.absoluteTolerance, 6));
 
     emit resultsChanged();
-    setStatus(QStringLiteral("Analisis completado con %1 segmentos.").arg(result.segments.size()),
+    setStatus(QStringLiteral("Analysis completed with %1 segments.").arg(result.segments.size()),
               QStringLiteral("success"));
 }
 

@@ -115,13 +115,13 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
     Result result;
 
     if (points.size() < 2) {
-        result.errorMessage = QStringLiteral("Se necesitan al menos dos puntos para analizar.");
+        result.errorMessage = QStringLiteral("At least two points are required to run the analysis.");
         return result;
     }
 
     for (const DataPoint &point : points) {
         if (!point.y.has_value()) {
-            result.errorMessage = QStringLiteral("Todos los puntos deben tener un valor Y antes de analizar.");
+            result.errorMessage = QStringLiteral("All points must have a Y value before analysis.");
             return result;
         }
     }
@@ -211,7 +211,7 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
 
         const RegressionResult regression = linearRegression(points, cursor, count);
         if (!regression.valid) {
-            result.errorMessage = QStringLiteral("No fue posible calcular una regresion valida para uno de los tramos.");
+            result.errorMessage = QStringLiteral("Could not compute a valid regression for one of the segments.");
             result.segments.clear();
             return result;
         }
@@ -230,7 +230,7 @@ SegmentFitService::Result SegmentFitService::analyze(const QVector<DataPoint> &p
     }
 
     if (result.segments.isEmpty()) {
-        result.errorMessage = QStringLiteral("No se generaron segmentos validos.");
+        result.errorMessage = QStringLiteral("No valid segments were generated.");
     }
 
     return result;
