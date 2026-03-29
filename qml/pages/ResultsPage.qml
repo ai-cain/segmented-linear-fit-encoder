@@ -9,6 +9,9 @@ Item {
     required property var theme
     required property var controller
     required property var navigateToPage
+    property int resultSection: 0
+    property int fitChartMode: 0
+    property int errorChartMode: 0
 
     function mergeSeries(first, second) {
         const merged = []
@@ -21,6 +24,50 @@ Item {
             merged.push(right[i])
 
         return merged
+    }
+
+    function fitChartTitle() {
+        switch (page.fitChartMode) {
+        case 1:
+            return "Measured Data Only"
+        case 2:
+            return "Piecewise Lines Only"
+        default:
+            return "Measured Data + Piecewise Fit"
+        }
+    }
+
+    function fitChartSubtitle() {
+        switch (page.fitChartMode) {
+        case 1:
+            return "Only the measured segmented points are shown."
+        case 2:
+            return "Only the fitted piecewise line segments are shown."
+        default:
+            return "Original segmented points together with the fitted lines for each segment."
+        }
+    }
+
+    function fitChartSeries() {
+        switch (page.fitChartMode) {
+        case 1:
+            return controller.segmentedPointSeries
+        case 2:
+            return controller.fittedLineSeries
+        default:
+            return page.mergeSeries(controller.segmentedPointSeries, controller.fittedLineSeries)
+        }
+    }
+
+    function fitChartEmptyText() {
+        switch (page.fitChartMode) {
+        case 1:
+            return "Run the analysis to see measured points only."
+        case 2:
+            return "Run the analysis to see the fitted piecewise lines."
+        default:
+            return "Run the analysis to see the combined fit."
+        }
     }
 
     ScrollView {
@@ -97,86 +144,93 @@ Item {
                 }
             }
 
-            GridLayout {
-                id: chartGrid
+            Rectangle {
                 Layout.fillWidth: true
-                columns: width > 1280 ? 2 : 1
-                columnSpacing: 18
-                rowSpacing: 18
+                implicitHeight: navigationLayout.implicitHeight + 36
+                radius: 22
+                color: theme.panelAlt
+                border.width: 1
+                border.color: theme.border
 
-                PlotPanel {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 430
-                    theme: page.theme
-                    title: "Measured Data + Piecewise Fit"
-                    subtitle: "Original segmented points together with the fitted lines for each segment."
-                    xLabel: controller.inputDisplayName
-                    yLabel: controller.outputDisplayName
-                    showLegend: false
-                    seriesList: page.mergeSeries(controller.segmentedPointSeries, controller.fittedLineSeries)
-                    emptyText: "Run the analysis to see the combined fit."
+                ColumnLayout {
+                    id: navigationLayout
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 14
+
+                    Label {
+                        text: "Result Views"
+                        color: theme.textPrimary
+                        font.pixelSize: 20
+                        font.bold: true
+                    }
+
+                    Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: theme.textSecondary
+                        text: "Switch between the fitted curve, error diagnostics, and exportable results."
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        AppButton {
+                            Layout.fillWidth: true
+                            theme: page.theme
+                            primary: page.resultSection === 0
+                            text: "Fit Charts"
+                            onClicked: page.resultSection = 0
+                        }
+
+                        AppButton {
+                            Layout.fillWidth: true
+                            theme: page.theme
+                            primary: page.resultSection === 1
+                            text: "Error Charts"
+                            onClicked: page.resultSection = 1
+                        }
+
+                        AppButton {
+                            Layout.fillWidth: true
+                            theme: page.theme
+                            primary: page.resultSection === 2
+                            text: "Copy Results"
+                            onClicked: page.resultSection = 2
+                        }
+                    }
                 }
+            }
 
-                PlotPanel {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 430
-                    theme: page.theme
-                    title: "Measured Data Only"
-                    subtitle: "The same segmented data without the fitted lines."
-                    xLabel: controller.inputDisplayName
-                    yLabel: controller.outputDisplayName
-                    seriesList: controller.segmentedPointSeries
-                    emptyText: "Run the analysis to see segmented points."
-                }
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: visible ? implicitHeight : 0
+                visible: page.resultSection !== 2
+                implicitHeight: chartSectionLayout.implicitHeight + 36
+                radius: 22
+                color: theme.panelAlt
+                border.width: 1
+                border.color: theme.border
 
-                PlotPanel {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 430
-                    theme: page.theme
-                    title: "Piecewise Lines Only"
-                    subtitle: "Final equations displayed as individual line segments."
-                    xLabel: controller.inputDisplayName
-                    yLabel: controller.outputDisplayName
-                    seriesList: controller.fittedLineSeries
-                    emptyText: "Run the analysis to see the fitted lines."
-                }
+                ColumnLayout {
+                    id: chartSectionLayout
+                    anchors.fill: parent
+                    anchors.margins: 18
+                    spacing: 14
 
-                PlotPanel {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 430
-                    theme: page.theme
-                    title: "Residual vs Global Line"
-                    subtitle: "Residuals computed against the notebook's single global line reference."
-                    xLabel: controller.inputDisplayName
-                    yLabel: "Residual"
-                    showLegend: false
-                    seriesList: controller.globalResidualSeries
-                    referenceLines: [{ "value": 0, "color": "#94a3b8", "width": 1.5 }]
-                    emptyText: "Run the analysis to inspect the global residuals."
-                }
-
-                PlotPanel {
-                    Layout.fillWidth: true
-                    Layout.columnSpan: chartGrid.columns
-                    Layout.preferredHeight: 440
-                    theme: page.theme
-                    title: "Segment Residual Error"
-                    subtitle: "Per-segment residuals with the review tolerance band and out-of-range points highlighted."
-                    xLabel: controller.inputDisplayName
-                    yLabel: "Residual"
-                    chartHeight: 340
-                    seriesList: page.mergeSeries(controller.segmentResidualSeries, controller.segmentErrorOutlierSeries)
-                    bandLower: -controller.reviewTolerance
-                    bandUpper: controller.reviewTolerance
-                    bandColor: "#2563eb"
-                    referenceLines: [{ "value": 0, "color": "#cbd5e1", "width": 1.5 }]
-                    emptyText: "Run the analysis to inspect segment error."
+                    Loader {
+                        Layout.fillWidth: true
+                        active: true
+                        sourceComponent: page.resultSection === 0 ? fitChartsComponent : errorChartsComponent
+                    }
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 460
+                Layout.preferredHeight: visible ? 460 : 0
+                visible: page.resultSection === 2
                 spacing: 18
 
                 Rectangle {
@@ -373,6 +427,109 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    Component {
+        id: fitChartsComponent
+
+        ColumnLayout {
+            spacing: 14
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                AppButton {
+                    Layout.fillWidth: true
+                    theme: page.theme
+                    primary: page.fitChartMode === 0
+                    text: "Combined"
+                    onClicked: page.fitChartMode = 0
+                }
+
+                AppButton {
+                    Layout.fillWidth: true
+                    theme: page.theme
+                    primary: page.fitChartMode === 1
+                    text: "Measured Only"
+                    onClicked: page.fitChartMode = 1
+                }
+
+                AppButton {
+                    Layout.fillWidth: true
+                    theme: page.theme
+                    primary: page.fitChartMode === 2
+                    text: "Lines Only"
+                    onClicked: page.fitChartMode = 2
+                }
+            }
+
+            PlotPanel {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 500
+                theme: page.theme
+                title: page.fitChartTitle()
+                subtitle: page.fitChartSubtitle()
+                xLabel: controller.inputDisplayName
+                yLabel: controller.outputDisplayName
+                showLegend: page.fitChartMode === 0
+                seriesList: page.fitChartSeries()
+                emptyText: page.fitChartEmptyText()
+            }
+        }
+    }
+
+    Component {
+        id: errorChartsComponent
+
+        ColumnLayout {
+            spacing: 14
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                AppButton {
+                    Layout.fillWidth: true
+                    theme: page.theme
+                    primary: page.errorChartMode === 0
+                    text: "Global Residual"
+                    onClicked: page.errorChartMode = 0
+                }
+
+                AppButton {
+                    Layout.fillWidth: true
+                    theme: page.theme
+                    primary: page.errorChartMode === 1
+                    text: "Segment Error"
+                    onClicked: page.errorChartMode = 1
+                }
+            }
+
+            PlotPanel {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 510
+                theme: page.theme
+                title: page.errorChartMode === 0 ? "Residual vs Global Line" : "Segment Residual Error"
+                subtitle: page.errorChartMode === 0
+                          ? "Residuals computed against the notebook's single global line reference."
+                          : "Per-segment residuals with the review tolerance band and out-of-range points highlighted."
+                xLabel: controller.inputDisplayName
+                yLabel: "Residual"
+                chartHeight: page.errorChartMode === 0 ? 350 : 360
+                showLegend: page.errorChartMode === 1
+                seriesList: page.errorChartMode === 0
+                            ? controller.globalResidualSeries
+                            : page.mergeSeries(controller.segmentResidualSeries, controller.segmentErrorOutlierSeries)
+                bandLower: page.errorChartMode === 1 ? -controller.reviewTolerance : 0
+                bandUpper: page.errorChartMode === 1 ? controller.reviewTolerance : 0
+                bandColor: "#2563eb"
+                referenceLines: [{ "value": 0, "color": page.errorChartMode === 0 ? "#94a3b8" : "#cbd5e1", "width": 1.5 }]
+                emptyText: page.errorChartMode === 0
+                           ? "Run the analysis to inspect the global residuals."
+                           : "Run the analysis to inspect segment error."
             }
         }
     }

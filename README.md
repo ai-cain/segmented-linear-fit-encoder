@@ -1,47 +1,80 @@
 # Segmented Linear Fit Encoder
 
-Aplicacion desktop en Qt 6 + C++ para convertir una curva medida en una aproximacion lineal por tramos.
+Qt 6 + C++ desktop application for building a piecewise linear approximation from measured data.
 
-La app actual se presenta como `Piecewise Linear Fit Studio` y permite:
+The current app is shipped as `Piecewise Linear Fit Studio` and supports:
 
-- cargar puntos desde CSV
-- generar rangos manuales con `min / max / intervals`
-- editar valores `X` y `Y` desde la tabla
-- analizar segmentos lineales consecutivos
-- revisar residuos y tolerancias con graficas
-- exportar codigo para `PLC`, `Python`, `C++`, `JavaScript`, `Java` y `C#`
+- CSV import
+- manual point generation
+- editable point tables
+- piecewise linear analysis
+- residual review charts
+- code export for PLC, Python, C++, JavaScript, Java, and C#
 
-## Flujo General
+## Project Flow
 
 ```mermaid
 flowchart LR
-    A[CSV o puntos manuales] --> B[PointTableModel]
+    A[CSV or Manual Input] --> B[PointTableModel]
     B --> C[SegmentFitService]
-    C --> D[Segmentos y metricas]
-    D --> E[Graficas en QML]
+    C --> D[Segment results]
+    D --> E[Charts in QML]
     D --> F[CodeExportService]
-    F --> G[Codigo PLC y otros targets]
+    F --> G[PLC and code output]
 ```
 
-## Documentacion
+## Documentation
 
-La documentacion completa vive en [`docs/`](./docs/README.md):
+Full project documentation is available in [`docs/README.md`](./docs/README.md).
 
-- [`docs/README.md`](./docs/README.md): indice general
-- [`docs/architecture.md`](./docs/architecture.md): capas, clases y flujo entre QML y C++
-- [`docs/algorithm.md`](./docs/algorithm.md): algoritmo de segmentacion, formulas y criterios
-- [`docs/usage.md`](./docs/usage.md): guia funcional de la interfaz y la exportacion
-- [`docs/notebooks/segmented-linear-fit.md`](./docs/notebooks/segmented-linear-fit.md): notebook legado y relacion con la app actual
+It covers:
 
-## Uso Rapido
+- architecture
+- data flow
+- segmentation algorithm
+- chart generation
+- export behavior
+- relationship with the legacy notebook
 
-1. Abrir `CMakeLists.txt` en Qt Creator.
-2. Cargar un CSV o generar puntos manualmente.
-3. Completar los valores `Y` faltantes si hace falta.
-4. Ejecutar `Analyze`.
-5. Revisar graficas, segmentos y codigo exportado en `Results`.
+## Screenshots
 
-## Build En Windows Con Qt
+### CSV Import
+
+![CSV Import](docs/img/01_csv_import.png)
+
+### Manual Input
+
+**Range mode**
+
+![Manual Input Range](docs/img/02_01_manual_input_range.png)
+
+**Custom points mode**
+
+![Manual Input Custom](docs/img/02_01_manual_input_custom.png)
+
+### Results
+
+**Piecewise fit chart**
+
+![Results Chart](docs/img/03_01_results_chart.png)
+
+**Global residual view**
+
+![Global Residual](docs/img/03_02_results_global_residual.png)
+
+**Segment error review**
+
+![Segment Error](docs/img/03_03_results_segment_error.png)
+
+**Code export**
+
+![Code Export](docs/img/03_04_code_copy.png)
+
+## Open In Qt Creator
+
+Open `CMakeLists.txt`, not `.pro` or `.pyproject`.
+
+## Build On Windows With Qt
 
 ```powershell
 C:\Qt\6.10.2\llvm-mingw_64\bin\qt-cmake.bat -S . -B build-cpp-qt -G Ninja -DCMAKE_MAKE_PROGRAM=C:/Qt/Tools/Ninja/ninja.exe -DCMAKE_CXX_COMPILER=C:/Qt/Tools/llvm-mingw1706_64/bin/clang++.exe
@@ -49,25 +82,19 @@ C:\Qt\Tools\Ninja\ninja.exe -C build-cpp-qt
 C:\Qt\6.10.2\llvm-mingw_64\bin\windeployqt.exe --qmldir qml build-cpp-qt\piecewise-linear-fit.exe
 ```
 
-Ejecutable esperado:
+Expected executable:
 
 - `build-cpp-qt/piecewise-linear-fit.exe`
 
-## Estructura Del Repo
+## Repository Layout
 
-- `src/`: backend en C++ (`AppController`, modelo de puntos, analisis y exportacion)
-- `qml/`: interfaz Qt Quick (`Main.qml`, paginas y componentes)
-- `files/`: notebook original y CSVs de ejemplo
-- `docs/`: documentacion tecnica y funcional
+- `src/`: C++ backend
+- `qml/`: Qt Quick UI
+- `files/`: sample CSV files and the legacy notebook
+- `docs/`: project documentation
 
-## Datos De Ejemplo
-
-El repo incluye archivos de prueba en `files/`:
+## Sample Files
 
 - `files/data1_length.csv`
 - `files/data2_length.csv`
 - `files/segmented_linear_fit.ipynb`
-
-## Nota
-
-La implementacion principal hoy es la app en C++/QML. El notebook original se mantiene como referencia historica y fuente del enfoque de segmentacion.

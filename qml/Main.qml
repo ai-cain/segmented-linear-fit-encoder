@@ -62,7 +62,7 @@ ApplicationWindow {
         case 1:
             return "Generate a range manually and fill in Y values."
         case 2:
-            return "Inspect the piecewise fit, chart, and PLC output."
+            return "Inspect the piecewise fit, chart, and code output."
         default:
             return ""
         }
@@ -192,7 +192,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             theme: theme
                             text: "Results"
-                            subtitle: "Chart and PLC output"
+                            subtitle: "Chart and Code output"
                             selected: window.currentPage === 2
                             onClicked: window.currentPage = 2
                         }
