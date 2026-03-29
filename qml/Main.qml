@@ -320,7 +320,9 @@ ApplicationWindow {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                     color: theme.textSecondary
-                                    text: window.controller.missingYCount + " Y values still missing"
+                                    text: window.controller.missingYCount === 0
+                                          ? "All " + window.controller.outputDisplayName + " values are available"
+                                          : window.controller.missingYCount + " " + window.controller.outputDisplayName + " values still missing"
                                 }
                             }
                         }

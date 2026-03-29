@@ -113,6 +113,16 @@ QString normalizePath(const QString &source)
     return source;
 }
 
+QString cleanedHeaderText(QString header)
+{
+    header = header.trimmed();
+    if (header.startsWith(QLatin1Char('"')) && header.endsWith(QLatin1Char('"')) && header.size() >= 2) {
+        header = header.mid(1, header.size() - 2).trimmed();
+    }
+
+    return header;
+}
+
 QString segmentColor(int index)
 {
     static const QStringList palette = {
@@ -452,6 +462,53 @@ double AppController::reviewTolerance() const
     return m_reviewTolerance;
 }
 
+bool AppController::csvHeadersAvailable() const
+{
+    return !m_csvInputHeader.isEmpty() && !m_csvOutputHeader.isEmpty();
+}
+
+bool AppController::useCsvHeadersAsNames() const
+{
+    return m_useCsvHeadersAsNames && csvHeadersAvailable();
+}
+
+void AppController::setUseCsvHeadersAsNames(bool enabled)
+{
+    const bool normalized = enabled && csvHeadersAvailable();
+    if (m_useCsvHeadersAsNames == normalized) {
+        return;
+    }
+
+    m_useCsvHeadersAsNames = normalized;
+    rebuildResultPresentation();
+    emit csvHeadersChanged();
+    emit exportCodeChanged();
+
+    if (hasResults()) {
+        emit resultsChanged();
+    }
+}
+
+QString AppController::inputDisplayName() const
+{
+    return useCsvHeadersAsNames() ? m_csvInputHeader : QStringLiteral("X");
+}
+
+QString AppController::outputDisplayName() const
+{
+    return useCsvHeadersAsNames() ? m_csvOutputHeader : QStringLiteral("Y");
+}
+
+QString AppController::csvHeaderSummary() const
+{
+    if (!csvHeadersAvailable()) {
+        return QStringLiteral("No CSV header names were detected in the current dataset.");
+    }
+
+    return QStringLiteral("Detected CSV headers: %1 -> %2")
+        .arg(m_csvInputHeader, m_csvOutputHeader);
+}
+
 QStringList AppController::exportTargets() const
 {
     return CodeExportService::exportTargets();
@@ -481,7 +538,7 @@ void AppController::setExportTarget(const QString &target)
 
 QString AppController::exportCode() const
 {
-    return CodeExportService::buildCode(m_segments, m_exportTarget);
+    return CodeExportService::buildCode(m_segments, m_exportTarget, exportInputName(), exportOutputName());
 }
 
 QString AppController::summaryText() const
@@ -527,6 +584,8 @@ void AppController::loadCsv(const QString &source)
     const QChar delimiter = detectDelimiter(rawLines.first());
     QVector<DataPoint> points;
     points.reserve(rawLines.size());
+    QString detectedInputHeader;
+    QString detectedOutputHeader;
 
     bool headerSkipped = false;
     for (int lineIndex = 0; lineIndex < rawLines.size(); ++lineIndex) {
@@ -549,6 +608,8 @@ void AppController::loadCsv(const QString &source)
         const bool yOk = parseNumber(fields.at(1), yValue);
 
         if (lineIndex == 0 && (!xOk || !yOk) && !headerSkipped) {
+            detectedInputHeader = cleanedHeaderText(fields.at(0));
+            detectedOutputHeader = cleanedHeaderText(fields.at(1));
             headerSkipped = true;
             continue;
         }
@@ -569,7 +630,22 @@ void AppController::loadCsv(const QString &source)
     }
 
     m_pointModel.setPoints(points);
+    const QString previousInputHeader = m_csvInputHeader;
+    const QString previousOutputHeader = m_csvOutputHeader;
+    const bool previousUseHeaders = m_useCsvHeadersAsNames;
+    m_csvInputHeader = detectedInputHeader;
+    m_csvOutputHeader = detectedOutputHeader;
+    if (!csvHeadersAvailable()) {
+        m_useCsvHeadersAsNames = false;
+    }
     invalidateResults();
+
+    if (previousInputHeader != m_csvInputHeader
+        || previousOutputHeader != m_csvOutputHeader
+        || previousUseHeaders != m_useCsvHeadersAsNames) {
+        emit csvHeadersChanged();
+        emit exportCodeChanged();
+    }
 
     const QString fileName = QFileInfo(filePath).fileName();
     setStatus(QStringLiteral("CSV loaded: %1 (%2 points).").arg(fileName).arg(points.size()),
@@ -603,6 +679,7 @@ void AppController::generatePoints(double minimum, double maximum, int intervals
     }
 
     m_pointModel.setPoints(points);
+    clearCsvHeaderMetadata();
     invalidateResults();
 
     setStatus(QStringLiteral("Generated %1 points between %2 and %3.")
@@ -615,6 +692,7 @@ void AppController::generatePoints(double minimum, double maximum, int intervals
 void AppController::clearPoints()
 {
     m_pointModel.clear();
+    clearCsvHeaderMetadata();
     invalidateResults();
     setStatus(QStringLiteral("Current points were cleared."), QStringLiteral("neutral"));
 }
@@ -724,32 +802,8 @@ void AppController::runAnalysis()
         return;
     }
 
-    QVariantList segmentItems;
-    segmentItems.reserve(result.segments.size());
-
-    for (int index = 0; index < result.segments.size(); ++index) {
-        const SegmentResult &segment = result.segments.at(index);
-        QVariantMap item;
-        item.insert(QStringLiteral("title"), QStringLiteral("Segment %1").arg(index + 1));
-        item.insert(QStringLiteral("startIndex"), segment.startIndex);
-        item.insert(QStringLiteral("endIndex"), segment.endIndex);
-        item.insert(QStringLiteral("range"),
-                    QStringLiteral("%1 -> %2")
-                        .arg(formatNumber(segment.xStart, 4), formatNumber(segment.xEnd, 4)));
-        item.insert(QStringLiteral("equation"),
-                    QStringLiteral("OUT = %1 * IN + %2")
-                        .arg(formatNumber(segment.slope), formatNumber(segment.intercept)));
-        item.insert(QStringLiteral("rsquared"),
-                    QStringLiteral("R^2 = %1").arg(formatNumber(segment.rSquared, 5)));
-        item.insert(QStringLiteral("xStart"), segment.xStart);
-        item.insert(QStringLiteral("xEnd"), segment.xEnd);
-        item.insert(QStringLiteral("slopeValue"), segment.slope);
-        item.insert(QStringLiteral("interceptValue"), segment.intercept);
-        segmentItems.append(item);
-    }
-
-    m_segmentResults = segmentItems;
     m_segments = result.segments;
+    rebuildResultPresentation();
     const double maxAbsY = maxAbsYValue(m_pointModel.points());
     m_reviewTolerance = 0.2 * maxAbsY / 100.0;
     m_segmentedPointSeries = buildSegmentedPointSeries(m_pointModel.points(), m_segmentResults);
@@ -760,7 +814,6 @@ void AppController::runAnalysis()
                                                          m_segmentResults,
                                                          &m_segmentErrorOutlierSeries,
                                                          maxAbsY);
-    m_plcCode = CodeExportService::buildPlcCode(result.segments);
     m_summaryText = QStringLiteral("%1 points processed, %2 segments, abs. tolerance %3")
                         .arg(pointCount())
                         .arg(result.segments.size())
@@ -840,4 +893,63 @@ void AppController::invalidateResults()
         emit exportCodeChanged();
         emit resultsChanged();
     }
+}
+
+void AppController::clearCsvHeaderMetadata()
+{
+    const bool hadMetadata = csvHeadersAvailable() || m_useCsvHeadersAsNames;
+    m_csvInputHeader.clear();
+    m_csvOutputHeader.clear();
+    m_useCsvHeadersAsNames = false;
+
+    if (hadMetadata) {
+        emit csvHeadersChanged();
+        emit exportCodeChanged();
+    }
+}
+
+void AppController::rebuildResultPresentation()
+{
+    QVariantList segmentItems;
+    segmentItems.reserve(m_segments.size());
+
+    const QString inputName = inputDisplayName();
+    const QString outputName = outputDisplayName();
+
+    for (int index = 0; index < m_segments.size(); ++index) {
+        const SegmentResult &segment = m_segments.at(index);
+        QVariantMap item;
+        item.insert(QStringLiteral("title"), QStringLiteral("Segment %1").arg(index + 1));
+        item.insert(QStringLiteral("startIndex"), segment.startIndex);
+        item.insert(QStringLiteral("endIndex"), segment.endIndex);
+        item.insert(QStringLiteral("range"),
+                    QStringLiteral("%1 -> %2")
+                        .arg(formatNumber(segment.xStart, 4), formatNumber(segment.xEnd, 4)));
+        item.insert(QStringLiteral("equation"),
+                    QStringLiteral("%1 = %2 * %3 + %4")
+                        .arg(outputName,
+                             formatNumber(segment.slope),
+                             inputName,
+                             formatNumber(segment.intercept)));
+        item.insert(QStringLiteral("rsquared"),
+                    QStringLiteral("R^2 = %1").arg(formatNumber(segment.rSquared, 5)));
+        item.insert(QStringLiteral("xStart"), segment.xStart);
+        item.insert(QStringLiteral("xEnd"), segment.xEnd);
+        item.insert(QStringLiteral("slopeValue"), segment.slope);
+        item.insert(QStringLiteral("interceptValue"), segment.intercept);
+        segmentItems.append(item);
+    }
+
+    m_segmentResults = segmentItems;
+    m_plcCode = CodeExportService::buildPlcCode(m_segments, exportInputName(), exportOutputName());
+}
+
+QString AppController::exportInputName() const
+{
+    return useCsvHeadersAsNames() ? m_csvInputHeader : QString();
+}
+
+QString AppController::exportOutputName() const
+{
+    return useCsvHeadersAsNames() ? m_csvOutputHeader : QString();
 }

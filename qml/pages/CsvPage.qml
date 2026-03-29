@@ -70,6 +70,53 @@ Item {
                             text: "The app reads the first two numeric columns as X and Y."
                         }
 
+                        CheckBox {
+                            Layout.fillWidth: true
+                            visible: controller.csvHeadersAvailable
+                            checked: controller.useCsvHeadersAsNames
+                            text: "Use CSV header names in labels and exported code"
+                            onToggled: controller.useCsvHeadersAsNames = checked
+
+                            indicator: Rectangle {
+                                implicitWidth: 18
+                                implicitHeight: 18
+                                x: parent.leftPadding
+                                y: parent.topPadding + (parent.availableHeight - height) / 2
+                                radius: 5
+                                color: parent.checked ? theme.accent : theme.panel
+                                border.width: 1
+                                border.color: parent.checked ? theme.accent : theme.fieldBorder
+
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 8
+                                    height: 8
+                                    radius: 3
+                                    color: theme.bg
+                                    visible: parent.parent.checked
+                                }
+                            }
+
+                            contentItem: Text {
+                                leftPadding: importNamesToggle.indicator.width + importNamesToggle.spacing
+                                text: importNamesToggle.text
+                                color: theme.textPrimary
+                                font.pixelSize: 14
+                                verticalAlignment: Text.AlignVCenter
+                                wrapMode: Text.WordWrap
+                            }
+
+                            id: importNamesToggle
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            visible: controller.csvHeadersAvailable
+                            wrapMode: Text.WordWrap
+                            color: theme.textSecondary
+                            text: controller.csvHeaderSummary
+                        }
+
                         AppButton {
                             Layout.fillWidth: true
                             theme: page.theme
@@ -105,7 +152,9 @@ Item {
                             wrapMode: Text.WordWrap
                             color: theme.textSecondary
                             text: controller.hasPoints
-                                  ? controller.pointCount + " points loaded, " + controller.missingYCount + " Y values missing."
+                                  ? (controller.missingYCount === 0
+                                     ? controller.pointCount + " points loaded, all " + controller.outputDisplayName + " values are available."
+                                     : controller.pointCount + " points loaded, " + controller.missingYCount + " " + controller.outputDisplayName + " values missing.")
                                   : "No CSV loaded yet."
                         }
 
@@ -148,6 +197,11 @@ Item {
             Layout.fillHeight: true
             theme: page.theme
             controller: page.controller
+            xHeader: controller.inputDisplayName
+            yHeader: controller.outputDisplayName
+            subtitle: controller.useCsvHeadersAsNames
+                      ? "The table is using the CSV header names for the X/Y labels and exported code."
+                      : "The app is using generic X/Y labels. Enable the CSV header option on the left if you want the original names."
         }
     }
 }

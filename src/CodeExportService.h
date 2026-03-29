@@ -10,7 +10,10 @@ class CodeExportService
 {
 public:
     static QStringList exportTargets();
-    static QString buildCode(const QVector<SegmentResult> &segments, const QString &target);
+    static QString buildCode(const QVector<SegmentResult> &segments,
+                             const QString &target,
+                             const QString &inputName = QStringLiteral("IN_VALUE"),
+                             const QString &outputName = QStringLiteral("OUT_LONG"));
     static QString buildPlcCode(const QVector<SegmentResult> &segments,
                                 const QString &inputName = QStringLiteral("IN_VALUE"),
                                 const QString &outputName = QStringLiteral("OUT_LONG"));

@@ -124,7 +124,9 @@ Item {
                                 wrapMode: Text.WordWrap
                                 color: theme.textSecondary
                                 text: controller.hasPoints
-                                      ? controller.pointCount + " points available, " + controller.missingYCount + " Y values missing."
+                                      ? (controller.missingYCount === 0
+                                         ? controller.pointCount + " points available, all " + controller.outputDisplayName + " values are available."
+                                         : controller.pointCount + " points available, " + controller.missingYCount + " " + controller.outputDisplayName + " values missing.")
                                       : (page.inputMode === 0
                                          ? "No generated range yet."
                                          : "No custom points yet.")

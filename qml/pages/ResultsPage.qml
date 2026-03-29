@@ -110,8 +110,8 @@ Item {
                     theme: page.theme
                     title: "Measured Data + Piecewise Fit"
                     subtitle: "Original segmented points together with the fitted lines for each segment."
-                    xLabel: "Input"
-                    yLabel: "Output"
+                    xLabel: controller.inputDisplayName
+                    yLabel: controller.outputDisplayName
                     showLegend: false
                     seriesList: page.mergeSeries(controller.segmentedPointSeries, controller.fittedLineSeries)
                     emptyText: "Run the analysis to see the combined fit."
@@ -123,8 +123,8 @@ Item {
                     theme: page.theme
                     title: "Measured Data Only"
                     subtitle: "The same segmented data without the fitted lines."
-                    xLabel: "Input"
-                    yLabel: "Output"
+                    xLabel: controller.inputDisplayName
+                    yLabel: controller.outputDisplayName
                     seriesList: controller.segmentedPointSeries
                     emptyText: "Run the analysis to see segmented points."
                 }
@@ -135,8 +135,8 @@ Item {
                     theme: page.theme
                     title: "Piecewise Lines Only"
                     subtitle: "Final equations displayed as individual line segments."
-                    xLabel: "Input"
-                    yLabel: "Output"
+                    xLabel: controller.inputDisplayName
+                    yLabel: controller.outputDisplayName
                     seriesList: controller.fittedLineSeries
                     emptyText: "Run the analysis to see the fitted lines."
                 }
@@ -147,7 +147,7 @@ Item {
                     theme: page.theme
                     title: "Residual vs Global Line"
                     subtitle: "Residuals computed against the notebook's single global line reference."
-                    xLabel: "Input"
+                    xLabel: controller.inputDisplayName
                     yLabel: "Residual"
                     showLegend: false
                     seriesList: controller.globalResidualSeries
@@ -162,7 +162,7 @@ Item {
                     theme: page.theme
                     title: "Segment Residual Error"
                     subtitle: "Per-segment residuals with the review tolerance band and out-of-range points highlighted."
-                    xLabel: "Input"
+                    xLabel: controller.inputDisplayName
                     yLabel: "Residual"
                     chartHeight: 340
                     seriesList: page.mergeSeries(controller.segmentResidualSeries, controller.segmentErrorOutlierSeries)

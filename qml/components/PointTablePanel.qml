@@ -11,11 +11,23 @@ Rectangle {
     property string subtitle: "X is fixed. Edit Y values row by row before running the analysis."
     property bool xEditable: false
     property bool allowDelete: false
+    property string xHeader: "X"
+    property string yHeader: "Y"
 
     radius: 22
     color: theme.panelAlt
     border.width: 1
     border.color: theme.border
+
+    function formatNumber(value) {
+        const numericValue = Number(value)
+        if (!isFinite(numericValue))
+            return ""
+
+        let text = numericValue.toFixed(6)
+        text = text.replace(/\.?0+$/, "")
+        return text
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -58,14 +70,14 @@ Rectangle {
                 }
 
                 Label {
-                    text: "X"
+                    text: panel.xHeader
                     color: theme.textSecondary
                     font.bold: true
                     Layout.preferredWidth: 180
                 }
 
                 Label {
-                    text: "Y"
+                    text: panel.yHeader
                     color: theme.textSecondary
                     font.bold: true
                     Layout.fillWidth: true
@@ -98,18 +110,21 @@ Rectangle {
                 ScrollBar.vertical: ScrollBar { }
 
                 delegate: Rectangle {
-                    id: pointRow
+                    id: rowCard
                     required property int index
-                    required property string displayX
-                    required property string displayY
+                    required property real xValue
+                    required property var yValue
                     required property bool validY
+
+                    readonly property string xText: panel.formatNumber(xValue)
+                    readonly property string yText: validY ? panel.formatNumber(yValue) : ""
 
                     width: ListView.view ? ListView.view.width : 0
                     implicitHeight: 58
                     radius: 14
-                    color: pointRow.index % 2 === 0 ? "#0d1728" : "#101b2f"
+                    color: rowCard.index % 2 === 0 ? "#0d1728" : "#101b2f"
                     border.width: 1
-                    border.color: pointRow.validY ? theme.border : theme.accentSoft
+                    border.color: rowCard.validY ? theme.border : theme.accentSoft
 
                     RowLayout {
                         anchors.fill: parent
@@ -123,106 +138,101 @@ Rectangle {
                             color: "#13253f"
 
                             Label {
-                                anchors.centerIn: parent
-                                text: String(pointRow.index + 1)
+                                anchors.fill: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: String(rowCard.index + 1)
                                 color: theme.textPrimary
                                 font.bold: true
                             }
                         }
 
-                        Loader {
+                        Rectangle {
+                            visible: !panel.xEditable
                             Layout.preferredWidth: 180
                             Layout.fillHeight: true
-                            active: true
-                            sourceComponent: panel.xEditable ? editableXComponent : fixedXComponent
+                            radius: 10
+                            color: theme.panel
+                            border.width: 1
+                            border.color: theme.fieldBorder
+
+                            Label {
+                                anchors.fill: parent
+                                leftPadding: 12
+                                rightPadding: 12
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                                text: rowCard.xText
+                                color: theme.textPrimary
+                            }
                         }
 
                         TextField {
-                            Layout.fillWidth: true
+                            id: xField
+                            visible: panel.xEditable
+                            Layout.preferredWidth: 180
                             Layout.fillHeight: true
-                            text: pointRow.displayY
-                            placeholderText: "Enter Y"
+                            property int rowIndex: rowCard.index
+                            text: rowCard.xText
+                            placeholderText: "Enter X"
                             color: theme.textPrimary
                             selectByMouse: true
-                            onEditingFinished: controller.updatePointY(pointRow.index, text)
+                            onEditingFinished: controller.updatePointX(rowIndex, text)
 
                             background: Rectangle {
                                 radius: 10
                                 color: theme.panel
                                 border.width: 1
-                                border.color: pointRow.validY ? theme.fieldBorder : theme.accentSoft
+                                border.color: theme.fieldBorder
                             }
                         }
 
-                        Loader {
+                        TextField {
+                            id: yField
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            property int rowIndex: rowCard.index
+                            property bool rowValid: rowCard.validY
+                            text: rowCard.yText
+                            placeholderText: "Enter Y"
+                            color: theme.textPrimary
+                            selectByMouse: true
+                            onEditingFinished: controller.updatePointY(rowIndex, text)
+
+                            background: Rectangle {
+                                radius: 10
+                                color: theme.panel
+                                border.width: 1
+                                border.color: yField.rowValid ? theme.fieldBorder : theme.accentSoft
+                            }
+                        }
+
+                        Button {
+                            visible: panel.allowDelete
                             Layout.preferredWidth: panel.allowDelete ? 92 : 0
                             Layout.fillHeight: true
-                            active: panel.allowDelete
-                            sourceComponent: deleteComponent
+                            text: "Delete"
+                            onClicked: panel.controller.removePoint(rowCard.index)
+
+                            contentItem: Label {
+                                text: parent.text
+                                color: "#ffd5d5"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+
+                            background: Rectangle {
+                                radius: 10
+                                color: parent.down ? "#48212a" : "#2a1520"
+                                border.width: 1
+                                border.color: "#7f1d1d"
+                            }
                         }
                     }
                 }
-            }
-        }
-    }
-
-    Component {
-        id: fixedXComponent
-
-        Rectangle {
-            radius: 10
-            color: panel.theme.panel
-            border.width: 1
-            border.color: panel.theme.fieldBorder
-
-            Label {
-                anchors.centerIn: parent
-                text: pointRow.displayX
-                color: panel.theme.textPrimary
-            }
-        }
-    }
-
-    Component {
-        id: editableXComponent
-
-        TextField {
-            text: pointRow.displayX
-            placeholderText: "Enter X"
-            color: panel.theme.textPrimary
-            selectByMouse: true
-            onEditingFinished: panel.controller.updatePointX(pointRow.index, text)
-
-            background: Rectangle {
-                radius: 10
-                color: panel.theme.panel
-                border.width: 1
-                border.color: panel.theme.fieldBorder
-            }
-        }
-    }
-
-    Component {
-        id: deleteComponent
-
-        Button {
-            text: "Delete"
-            onClicked: panel.controller.removePoint(pointRow.index)
-
-            contentItem: Label {
-                text: parent.text
-                color: "#ffd5d5"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: 12
-                font.bold: true
-            }
-
-            background: Rectangle {
-                radius: 10
-                color: parent.down ? "#48212a" : "#2a1520"
-                border.width: 1
-                border.color: "#7f1d1d"
             }
         }
     }

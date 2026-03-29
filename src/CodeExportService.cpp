@@ -95,6 +95,72 @@ QString buildJavaScriptCondition(const SegmentResult &segment, int index, int se
              valueName,
              formatNumber(segment.xStart, 6));
 }
+
+bool isAsciiIdentifierCharacter(const QChar &character, bool allowDigit)
+{
+    const ushort code = character.unicode();
+    if (character == QLatin1Char('_')) {
+        return true;
+    }
+
+    if (code >= 'A' && code <= 'Z') {
+        return true;
+    }
+
+    if (code >= 'a' && code <= 'z') {
+        return true;
+    }
+
+    if (allowDigit && code >= '0' && code <= '9') {
+        return true;
+    }
+
+    return false;
+}
+
+QString sanitizeIdentifier(const QString &text, const QString &fallback)
+{
+    QString result;
+    result.reserve(text.size());
+
+    for (const QChar character : text.trimmed()) {
+        if (isAsciiIdentifierCharacter(character, !result.isEmpty())) {
+            result.append(character);
+        } else if (!result.endsWith(QLatin1Char('_'))) {
+            result.append(QLatin1Char('_'));
+        }
+    }
+
+    while (result.endsWith(QLatin1Char('_'))) {
+        result.chop(1);
+    }
+
+    if (result.isEmpty()) {
+        result = fallback;
+    }
+
+    if (result.front().isDigit()) {
+        result.prepend(QLatin1Char('_'));
+    }
+
+    return result;
+}
+
+QString resolvedInputName(const QString &target, const QString &requestedName)
+{
+    const QString fallback = target == QStringLiteral("plc")
+        ? QStringLiteral("IN_VALUE")
+        : QStringLiteral("inValue");
+    return sanitizeIdentifier(requestedName, fallback);
+}
+
+QString resolvedOutputName(const QString &target, const QString &requestedName)
+{
+    const QString fallback = target == QStringLiteral("plc")
+        ? QStringLiteral("OUT_LONG")
+        : QStringLiteral("outValue");
+    return sanitizeIdentifier(requestedName, fallback);
+}
 } // namespace
 
 QStringList CodeExportService::exportTargets()
@@ -109,123 +175,148 @@ QStringList CodeExportService::exportTargets()
     };
 }
 
-QString CodeExportService::buildCode(const QVector<SegmentResult> &segments, const QString &target)
+QString CodeExportService::buildCode(const QVector<SegmentResult> &segments,
+                                     const QString &target,
+                                     const QString &inputName,
+                                     const QString &outputName)
 {
     const QString normalized = target.trimmed().toLower();
 
     if (normalized.isEmpty() || normalized == QStringLiteral("plc")) {
-        return buildPlcCode(segments);
+        return buildPlcCode(segments, inputName, outputName);
     }
 
     if (segments.isEmpty()) {
         return {};
     }
 
+    const QString valueName = resolvedInputName(normalized, inputName);
+    const QString resultName = resolvedOutputName(normalized, outputName);
     QStringList lines;
 
     if (normalized == QStringLiteral("python")) {
-        lines.append(QStringLiteral("def piecewise_linear_fit(in_value: float) -> float:"));
+        lines.append(QStringLiteral("def piecewise_linear_fit(%1: float) -> float:").arg(valueName));
+        lines.append(QStringLiteral("    %1 = 0.0").arg(resultName));
         for (int index = 0; index < segments.size(); ++index) {
             const SegmentResult &segment = segments.at(index);
             lines.append(QStringLiteral("    %1")
-                             .arg(buildPythonCondition(segment, index, segments.size(), QStringLiteral("in_value"))));
-            lines.append(QStringLiteral("        return %1 * in_value + %2  # Segment %3")
-                             .arg(formatNumber(segment.slope),
+                             .arg(buildPythonCondition(segment, index, segments.size(), valueName)));
+            lines.append(QStringLiteral("        %1 = %2 * %3 + %4  # Segment %5")
+                             .arg(resultName,
+                                  formatNumber(segment.slope),
+                                  valueName,
                                   formatNumber(segment.intercept),
                                   QString::number(index + 1)));
+            lines.append(QStringLiteral("        return %1").arg(resultName));
         }
-        lines.append(QStringLiteral("    return 0.0"));
+        lines.append(QStringLiteral("    return %1").arg(resultName));
         return lines.join(QLatin1Char('\n'));
     }
 
     if (normalized == QStringLiteral("c++")) {
-        lines.append(QStringLiteral("double piecewiseLinearFit(double inValue) {"));
+        lines.append(QStringLiteral("double piecewiseLinearFit(double %1) {").arg(valueName));
+        lines.append(QStringLiteral("    double %1 = 0.0;").arg(resultName));
         for (int index = 0; index < segments.size(); ++index) {
             const SegmentResult &segment = segments.at(index);
             lines.append(QStringLiteral("    %1")
                              .arg(buildClassicCondition(segment,
                                                         index,
                                                         segments.size(),
-                                                        QStringLiteral("inValue"),
+                                                        valueName,
                                                         QStringLiteral("if"),
                                                         QStringLiteral("else if"))));
-            lines.append(QStringLiteral("        return %1 * inValue + %2; // Segment %3")
-                             .arg(formatNumber(segment.slope),
+            lines.append(QStringLiteral("        %1 = %2 * %3 + %4; // Segment %5")
+                             .arg(resultName,
+                                  formatNumber(segment.slope),
+                                  valueName,
                                   formatNumber(segment.intercept),
                                   QString::number(index + 1)));
+            lines.append(QStringLiteral("        return %1;").arg(resultName));
             lines.append(QStringLiteral("    }"));
         }
-        lines.append(QStringLiteral("    return 0.0;"));
+        lines.append(QStringLiteral("    return %1;").arg(resultName));
         lines.append(QStringLiteral("}"));
         return lines.join(QLatin1Char('\n'));
     }
 
     if (normalized == QStringLiteral("javascript")) {
-        lines.append(QStringLiteral("function piecewiseLinearFit(inValue) {"));
+        lines.append(QStringLiteral("function piecewiseLinearFit(%1) {").arg(valueName));
+        lines.append(QStringLiteral("  let %1 = 0.0;").arg(resultName));
         for (int index = 0; index < segments.size(); ++index) {
             const SegmentResult &segment = segments.at(index);
             lines.append(QStringLiteral("  %1")
                              .arg(buildJavaScriptCondition(segment,
                                                            index,
                                                            segments.size(),
-                                                           QStringLiteral("inValue"))));
-            lines.append(QStringLiteral("    return %1 * inValue + %2; // Segment %3")
-                             .arg(formatNumber(segment.slope),
+                                                           valueName)));
+            lines.append(QStringLiteral("    %1 = %2 * %3 + %4; // Segment %5")
+                             .arg(resultName,
+                                  formatNumber(segment.slope),
+                                  valueName,
                                   formatNumber(segment.intercept),
                                   QString::number(index + 1)));
+            lines.append(QStringLiteral("    return %1;").arg(resultName));
             lines.append(QStringLiteral("  }"));
         }
-        lines.append(QStringLiteral("  return 0.0;"));
+        lines.append(QStringLiteral("  return %1;").arg(resultName));
         lines.append(QStringLiteral("}"));
         return lines.join(QLatin1Char('\n'));
     }
 
     if (normalized == QStringLiteral("java")) {
-        lines.append(QStringLiteral("public static double piecewiseLinearFit(double inValue) {"));
+        lines.append(QStringLiteral("public static double piecewiseLinearFit(double %1) {").arg(valueName));
+        lines.append(QStringLiteral("    double %1 = 0.0;").arg(resultName));
         for (int index = 0; index < segments.size(); ++index) {
             const SegmentResult &segment = segments.at(index);
             lines.append(QStringLiteral("    %1")
                              .arg(buildClassicCondition(segment,
                                                         index,
                                                         segments.size(),
-                                                        QStringLiteral("inValue"),
+                                                        valueName,
                                                         QStringLiteral("if"),
                                                         QStringLiteral("else if"))));
-            lines.append(QStringLiteral("        return %1 * inValue + %2; // Segment %3")
-                             .arg(formatNumber(segment.slope),
+            lines.append(QStringLiteral("        %1 = %2 * %3 + %4; // Segment %5")
+                             .arg(resultName,
+                                  formatNumber(segment.slope),
+                                  valueName,
                                   formatNumber(segment.intercept),
                                   QString::number(index + 1)));
+            lines.append(QStringLiteral("        return %1;").arg(resultName));
             lines.append(QStringLiteral("    }"));
         }
-        lines.append(QStringLiteral("    return 0.0;"));
+        lines.append(QStringLiteral("    return %1;").arg(resultName));
         lines.append(QStringLiteral("}"));
         return lines.join(QLatin1Char('\n'));
     }
 
     if (normalized == QStringLiteral("c#")) {
-        lines.append(QStringLiteral("public static double PiecewiseLinearFit(double inValue)"));
+        lines.append(QStringLiteral("public static double PiecewiseLinearFit(double %1)").arg(valueName));
         lines.append(QStringLiteral("{"));
+        lines.append(QStringLiteral("    double %1 = 0.0;").arg(resultName));
         for (int index = 0; index < segments.size(); ++index) {
             const SegmentResult &segment = segments.at(index);
             lines.append(QStringLiteral("    %1")
                              .arg(buildClassicCondition(segment,
                                                         index,
                                                         segments.size(),
-                                                        QStringLiteral("inValue"),
+                                                        valueName,
                                                         QStringLiteral("if"),
                                                         QStringLiteral("else if"))));
-            lines.append(QStringLiteral("        return %1 * inValue + %2; // Segment %3")
-                             .arg(formatNumber(segment.slope),
+            lines.append(QStringLiteral("        %1 = %2 * %3 + %4; // Segment %5")
+                             .arg(resultName,
+                                  formatNumber(segment.slope),
+                                  valueName,
                                   formatNumber(segment.intercept),
                                   QString::number(index + 1)));
+            lines.append(QStringLiteral("        return %1;").arg(resultName));
             lines.append(QStringLiteral("    }"));
         }
-        lines.append(QStringLiteral("    return 0.0;"));
+        lines.append(QStringLiteral("    return %1;").arg(resultName));
         lines.append(QStringLiteral("}"));
         return lines.join(QLatin1Char('\n'));
     }
 
-    return buildPlcCode(segments);
+    return buildPlcCode(segments, inputName, outputName);
 }
 
 QString CodeExportService::buildPlcCode(const QVector<SegmentResult> &segments,
@@ -236,20 +327,22 @@ QString CodeExportService::buildPlcCode(const QVector<SegmentResult> &segments,
         return {};
     }
 
+    const QString resolvedInput = resolvedInputName(QStringLiteral("plc"), inputName);
+    const QString resolvedOutput = resolvedOutputName(QStringLiteral("plc"), outputName);
     QStringList lines;
     for (int index = 0; index < segments.size(); ++index) {
         const SegmentResult &segment = segments.at(index);
-        lines.append(buildPlcCondition(segment, index, segments.size(), inputName));
+        lines.append(buildPlcCondition(segment, index, segments.size(), resolvedInput));
         lines.append(QStringLiteral("    %1 := %2 * %3 + %4;    // Tramo %5")
-                         .arg(outputName,
+                         .arg(resolvedOutput,
                               formatNumber(segment.slope),
-                              inputName,
+                              resolvedInput,
                               formatNumber(segment.intercept),
                               QString::number(index + 1)));
     }
 
     lines.append(QStringLiteral("ELSE"));
-    lines.append(QStringLiteral("    %1 := 0.0;").arg(outputName));
+    lines.append(QStringLiteral("    %1 := 0.0;").arg(resolvedOutput));
     lines.append(QStringLiteral("END_IF"));
 
     return lines.join(QLatin1Char('\n'));

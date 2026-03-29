@@ -25,6 +25,11 @@ class AppController : public QObject
     Q_PROPERTY(QVariantList segmentResidualSeries READ segmentResidualSeries NOTIFY resultsChanged)
     Q_PROPERTY(QVariantList segmentErrorOutlierSeries READ segmentErrorOutlierSeries NOTIFY resultsChanged)
     Q_PROPERTY(double reviewTolerance READ reviewTolerance NOTIFY resultsChanged)
+    Q_PROPERTY(bool csvHeadersAvailable READ csvHeadersAvailable NOTIFY csvHeadersChanged)
+    Q_PROPERTY(bool useCsvHeadersAsNames READ useCsvHeadersAsNames WRITE setUseCsvHeadersAsNames NOTIFY csvHeadersChanged)
+    Q_PROPERTY(QString inputDisplayName READ inputDisplayName NOTIFY csvHeadersChanged)
+    Q_PROPERTY(QString outputDisplayName READ outputDisplayName NOTIFY csvHeadersChanged)
+    Q_PROPERTY(QString csvHeaderSummary READ csvHeaderSummary NOTIFY csvHeadersChanged)
     Q_PROPERTY(QStringList exportTargets READ exportTargets CONSTANT)
     Q_PROPERTY(QString exportTarget READ exportTarget WRITE setExportTarget NOTIFY exportTargetChanged)
     Q_PROPERTY(QString exportCode READ exportCode NOTIFY exportCodeChanged)
@@ -49,6 +54,12 @@ public:
     QVariantList segmentResidualSeries() const;
     QVariantList segmentErrorOutlierSeries() const;
     double reviewTolerance() const;
+    bool csvHeadersAvailable() const;
+    bool useCsvHeadersAsNames() const;
+    void setUseCsvHeadersAsNames(bool enabled);
+    QString inputDisplayName() const;
+    QString outputDisplayName() const;
+    QString csvHeaderSummary() const;
     QStringList exportTargets() const;
     QString exportTarget() const;
     void setExportTarget(const QString &target);
@@ -73,12 +84,17 @@ signals:
     void statusMessageChanged();
     void pointsChanged();
     void resultsChanged();
+    void csvHeadersChanged();
     void exportTargetChanged();
     void exportCodeChanged();
 
 private:
     void setStatus(const QString &message, const QString &tone);
     void invalidateResults();
+    void clearCsvHeaderMetadata();
+    void rebuildResultPresentation();
+    QString exportInputName() const;
+    QString exportOutputName() const;
 
     PointTableModel m_pointModel;
     QString m_statusMessage;
@@ -93,5 +109,8 @@ private:
     QVariantList m_segmentResults;
     double m_reviewTolerance = 0.0;
     QVector<SegmentResult> m_segments;
+    QString m_csvInputHeader;
+    QString m_csvOutputHeader;
+    bool m_useCsvHeadersAsNames = false;
     QString m_exportTarget = QStringLiteral("PLC");
 };
