@@ -7,6 +7,12 @@ Rectangle {
     id: panel
     required property var theme
     required property var controller
+    readonly property string plotBackgroundColor: "#0d1727"
+    readonly property string plotBorderColor: "#2b3b58"
+    readonly property string plotGridColor: "#20314c"
+    readonly property string plotTextColor: "#98a7c4"
+    readonly property string plotPointColor: "#38bdf8"
+    readonly property string plotLineColor: "#f97316"
 
     radius: 22
     color: theme.panelAlt
@@ -47,6 +53,12 @@ Rectangle {
                 anchors.fill: parent
                 anchors.margins: 12
                 antialiasing: true
+                renderTarget: Canvas.Image
+
+                Component.onCompleted: requestPaint()
+                onVisibleChanged: if (visible) requestPaint()
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
 
                 Connections {
                     target: controller
@@ -56,10 +68,10 @@ Rectangle {
 
                 onPaint: {
                     const ctx = getContext("2d")
-                    ctx.clearRect(0, 0, width, height)
-
                     const width = canvas.width
                     const height = canvas.height
+                    ctx.clearRect(0, 0, width, height)
+
                     const left = 56
                     const right = 24
                     const top = 20
@@ -67,37 +79,44 @@ Rectangle {
                     const drawWidth = Math.max(1, width - left - right)
                     const drawHeight = Math.max(1, height - top - bottom)
 
-                    ctx.fillStyle = theme.field
+                    ctx.fillStyle = panel.plotBackgroundColor
                     ctx.fillRect(0, 0, width, height)
 
                     const points = controller.pointSeries
                     const segments = controller.segmentResults
 
                     if (points.length === 0) {
-                        ctx.fillStyle = theme.textSecondary
+                        ctx.fillStyle = panel.plotTextColor
                         ctx.font = "16px sans-serif"
                         ctx.textAlign = "center"
+                        ctx.textBaseline = "middle"
                         ctx.fillText("No chart data yet", width / 2, height / 2)
                         return
                     }
 
-                    let minX = points[0].x
-                    let maxX = points[0].x
-                    let minY = points[0].y
-                    let maxY = points[0].y
+                    let minX = Number(points[0].x)
+                    let maxX = Number(points[0].x)
+                    let minY = Number(points[0].y)
+                    let maxY = Number(points[0].y)
 
                     for (let i = 0; i < points.length; ++i) {
-                        minX = Math.min(minX, points[i].x)
-                        maxX = Math.max(maxX, points[i].x)
-                        minY = Math.min(minY, points[i].y)
-                        maxY = Math.max(maxY, points[i].y)
+                        const px = Number(points[i].x)
+                        const py = Number(points[i].y)
+                        minX = Math.min(minX, px)
+                        maxX = Math.max(maxX, px)
+                        minY = Math.min(minY, py)
+                        maxY = Math.max(maxY, py)
                     }
 
                     for (let i = 0; i < segments.length; ++i) {
-                        const y1 = segments[i].slopeValue * segments[i].xStart + segments[i].interceptValue
-                        const y2 = segments[i].slopeValue * segments[i].xEnd + segments[i].interceptValue
-                        minX = Math.min(minX, segments[i].xStart)
-                        maxX = Math.max(maxX, segments[i].xEnd)
+                        const xStart = Number(segments[i].xStart)
+                        const xEnd = Number(segments[i].xEnd)
+                        const slope = Number(segments[i].slopeValue)
+                        const intercept = Number(segments[i].interceptValue)
+                        const y1 = slope * xStart + intercept
+                        const y2 = slope * xEnd + intercept
+                        minX = Math.min(minX, xStart)
+                        maxX = Math.max(maxX, xEnd)
                         minY = Math.min(minY, y1, y2)
                         maxY = Math.max(maxY, y1, y2)
                     }
@@ -119,7 +138,7 @@ Rectangle {
                         return top + drawHeight - ((value - minY) / (maxY - minY)) * drawHeight
                     }
 
-                    ctx.strokeStyle = "#20314c"
+                    ctx.strokeStyle = panel.plotGridColor
                     ctx.lineWidth = 1
 
                     for (let i = 0; i <= 4; ++i) {
@@ -130,19 +149,23 @@ Rectangle {
                         ctx.stroke()
                     }
 
-                    ctx.strokeStyle = theme.fieldBorder
+                    ctx.strokeStyle = panel.plotBorderColor
                     ctx.lineWidth = 1.5
                     ctx.strokeRect(left, top, drawWidth, drawHeight)
 
                     if (segments.length > 0) {
-                        ctx.strokeStyle = theme.accent
+                        ctx.strokeStyle = panel.plotLineColor
                         ctx.lineWidth = 3
 
                         for (let i = 0; i < segments.length; ++i) {
-                            const startX = mapX(segments[i].xStart)
-                            const endX = mapX(segments[i].xEnd)
-                            const startY = mapY(segments[i].slopeValue * segments[i].xStart + segments[i].interceptValue)
-                            const endY = mapY(segments[i].slopeValue * segments[i].xEnd + segments[i].interceptValue)
+                            const xStart = Number(segments[i].xStart)
+                            const xEnd = Number(segments[i].xEnd)
+                            const slope = Number(segments[i].slopeValue)
+                            const intercept = Number(segments[i].interceptValue)
+                            const startX = mapX(xStart)
+                            const endX = mapX(xEnd)
+                            const startY = mapY(slope * xStart + intercept)
+                            const endY = mapY(slope * xEnd + intercept)
 
                             ctx.beginPath()
                             ctx.moveTo(startX, startY)
@@ -151,10 +174,10 @@ Rectangle {
                         }
                     }
 
-                    ctx.fillStyle = theme.info
+                    ctx.fillStyle = panel.plotPointColor
                     for (let i = 0; i < points.length; ++i) {
-                        const px = mapX(points[i].x)
-                        const py = mapY(points[i].y)
+                        const px = mapX(Number(points[i].x))
+                        const py = mapY(Number(points[i].y))
                         ctx.beginPath()
                         ctx.arc(px, py, 4, 0, Math.PI * 2)
                         ctx.fill()

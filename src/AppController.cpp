@@ -2,8 +2,10 @@
 
 #include "SegmentFitService.h"
 
+#include <QClipboard>
 #include <QFile>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QRegularExpression>
 #include <QTextStream>
 #include <QUrl>
@@ -386,6 +388,23 @@ void AppController::runAnalysis()
     emit resultsChanged();
     setStatus(QStringLiteral("Analysis completed with %1 segments.").arg(result.segments.size()),
               QStringLiteral("success"));
+}
+
+bool AppController::copyPlcCode()
+{
+    if (m_plcCode.trimmed().isEmpty()) {
+        setStatus(QStringLiteral("No PLC code is available to copy yet."), QStringLiteral("error"));
+        return false;
+    }
+
+    if (QClipboard *clipboard = QGuiApplication::clipboard()) {
+        clipboard->setText(m_plcCode);
+        setStatus(QStringLiteral("PLC code copied to the clipboard."), QStringLiteral("success"));
+        return true;
+    }
+
+    setStatus(QStringLiteral("Clipboard is not available on this system."), QStringLiteral("error"));
+    return false;
 }
 
 void AppController::setStatus(const QString &message, const QString &tone)

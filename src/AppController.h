@@ -40,6 +40,7 @@ public:
     Q_INVOKABLE void clearPoints();
     Q_INVOKABLE void updatePointY(int row, const QString &value);
     Q_INVOKABLE void runAnalysis();
+    Q_INVOKABLE bool copyPlcCode();
 
 signals:
     void statusMessageChanged();

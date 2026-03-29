@@ -139,11 +139,26 @@ Item {
                     anchors.margins: 18
                     spacing: 12
 
-                    Label {
-                        text: "PLC Code"
-                        color: theme.textPrimary
-                        font.pixelSize: 22
-                        font.bold: true
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+
+                        Label {
+                            Layout.fillWidth: true
+                            text: "PLC Code"
+                            color: theme.textPrimary
+                            font.pixelSize: 22
+                            font.bold: true
+                        }
+
+                        AppButton {
+                            Layout.preferredWidth: 132
+                            theme: page.theme
+                            primary: false
+                            text: "Copy PLC"
+                            enabled: controller.hasResults
+                            onClicked: controller.copyPlcCode()
+                        }
                     }
 
                     Label {
