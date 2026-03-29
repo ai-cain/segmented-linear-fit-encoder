@@ -7,6 +7,10 @@ Rectangle {
     id: panel
     required property var theme
     required property var controller
+    property string title: "Points Table"
+    property string subtitle: "X is fixed. Edit Y values row by row before running the analysis."
+    property bool xEditable: false
+    property bool allowDelete: false
 
     radius: 22
     color: theme.panelAlt
@@ -19,7 +23,7 @@ Rectangle {
         spacing: 12
 
         Label {
-            text: "Points Table"
+            text: panel.title
             color: theme.textPrimary
             font.pixelSize: 22
             font.bold: true
@@ -29,7 +33,7 @@ Rectangle {
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
             color: theme.textSecondary
-            text: "X is fixed. Edit Y values row by row before running the analysis."
+            text: panel.subtitle
         }
 
         Rectangle {
@@ -65,6 +69,14 @@ Rectangle {
                     color: theme.textSecondary
                     font.bold: true
                     Layout.fillWidth: true
+                }
+
+                Label {
+                    visible: panel.allowDelete
+                    text: "Action"
+                    color: theme.textSecondary
+                    font.bold: true
+                    Layout.preferredWidth: panel.allowDelete ? 92 : 0
                 }
             }
         }
@@ -118,19 +130,11 @@ Rectangle {
                             }
                         }
 
-                        Rectangle {
+                        Loader {
                             Layout.preferredWidth: 180
                             Layout.fillHeight: true
-                            radius: 10
-                            color: theme.panel
-                            border.width: 1
-                            border.color: theme.fieldBorder
-
-                            Label {
-                                anchors.centerIn: parent
-                                text: pointRow.displayX
-                                color: theme.textPrimary
-                            }
+                            active: true
+                            sourceComponent: panel.xEditable ? editableXComponent : fixedXComponent
                         }
 
                         TextField {
@@ -149,8 +153,76 @@ Rectangle {
                                 border.color: pointRow.validY ? theme.fieldBorder : theme.accentSoft
                             }
                         }
+
+                        Loader {
+                            Layout.preferredWidth: panel.allowDelete ? 92 : 0
+                            Layout.fillHeight: true
+                            active: panel.allowDelete
+                            sourceComponent: deleteComponent
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    Component {
+        id: fixedXComponent
+
+        Rectangle {
+            radius: 10
+            color: panel.theme.panel
+            border.width: 1
+            border.color: panel.theme.fieldBorder
+
+            Label {
+                anchors.centerIn: parent
+                text: pointRow.displayX
+                color: panel.theme.textPrimary
+            }
+        }
+    }
+
+    Component {
+        id: editableXComponent
+
+        TextField {
+            text: pointRow.displayX
+            placeholderText: "Enter X"
+            color: panel.theme.textPrimary
+            selectByMouse: true
+            onEditingFinished: panel.controller.updatePointX(pointRow.index, text)
+
+            background: Rectangle {
+                radius: 10
+                color: panel.theme.panel
+                border.width: 1
+                border.color: panel.theme.fieldBorder
+            }
+        }
+    }
+
+    Component {
+        id: deleteComponent
+
+        Button {
+            text: "Delete"
+            onClicked: panel.controller.removePoint(pointRow.index)
+
+            contentItem: Label {
+                text: parent.text
+                color: "#ffd5d5"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                font.pixelSize: 12
+                font.bold: true
+            }
+
+            background: Rectangle {
+                radius: 10
+                color: parent.down ? "#48212a" : "#2a1520"
+                border.width: 1
+                border.color: "#7f1d1d"
             }
         }
     }

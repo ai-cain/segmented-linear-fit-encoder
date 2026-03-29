@@ -60,7 +60,11 @@ public:
     Q_INVOKABLE void loadCsv(const QString &source);
     Q_INVOKABLE void generatePoints(double minimum, double maximum, int intervals);
     Q_INVOKABLE void clearPoints();
+    Q_INVOKABLE void updatePointX(int row, const QString &value);
     Q_INVOKABLE void updatePointY(int row, const QString &value);
+    Q_INVOKABLE bool addPoint(const QString &xValue, const QString &yValue = QString());
+    Q_INVOKABLE bool removePoint(int row);
+    Q_INVOKABLE void sortPointsByX();
     Q_INVOKABLE void runAnalysis();
     Q_INVOKABLE bool copyPlcCode();
     Q_INVOKABLE bool copyExportCode();

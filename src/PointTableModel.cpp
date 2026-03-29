@@ -122,6 +122,31 @@ void PointTableModel::clear()
     emit countChanged();
 }
 
+bool PointTableModel::setXValue(int row, const QString &text, QString *errorMessage)
+{
+    if (row < 0 || row >= m_points.size()) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("The requested row does not exist.");
+        }
+        return false;
+    }
+
+    const QString trimmed = text.trimmed();
+    double parsedValue = 0.0;
+    if (trimmed.isEmpty() || !parseNumber(trimmed, parsedValue)) {
+        if (errorMessage) {
+            *errorMessage = QStringLiteral("Enter a valid numeric X value.");
+        }
+        return false;
+    }
+
+    m_points[row].x = parsedValue;
+
+    const QModelIndex changedIndex = index(row);
+    emit dataChanged(changedIndex, changedIndex, {XRole, DisplayXRole});
+    return true;
+}
+
 bool PointTableModel::setYValue(int row, const QString &text, QString *errorMessage)
 {
     if (row < 0 || row >= m_points.size()) {

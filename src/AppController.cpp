@@ -12,6 +12,7 @@
 #include <QTextStream>
 #include <QUrl>
 
+#include <algorithm>
 #include <cmath>
 
 namespace
@@ -618,6 +619,17 @@ void AppController::clearPoints()
     setStatus(QStringLiteral("Current points were cleared."), QStringLiteral("neutral"));
 }
 
+void AppController::updatePointX(int row, const QString &value)
+{
+    QString errorMessage;
+    if (!m_pointModel.setXValue(row, value, &errorMessage)) {
+        setStatus(errorMessage, QStringLiteral("error"));
+        return;
+    }
+
+    setStatus(QStringLiteral("X value updated."), QStringLiteral("neutral"));
+}
+
 void AppController::updatePointY(int row, const QString &value)
 {
     QString errorMessage;
@@ -629,6 +641,67 @@ void AppController::updatePointY(int row, const QString &value)
     if (!value.trimmed().isEmpty()) {
         setStatus(QStringLiteral("Y value updated."), QStringLiteral("neutral"));
     }
+}
+
+bool AppController::addPoint(const QString &xValue, const QString &yValue)
+{
+    double parsedX = 0.0;
+    if (!parseNumber(xValue, parsedX)) {
+        setStatus(QStringLiteral("Enter a valid numeric X value before adding a point."),
+                  QStringLiteral("error"));
+        return false;
+    }
+
+    std::optional<double> parsedY;
+    const QString trimmedY = yValue.trimmed();
+    if (!trimmedY.isEmpty()) {
+        double yNumber = 0.0;
+        if (!parseNumber(trimmedY, yNumber)) {
+            setStatus(QStringLiteral("Enter a valid numeric Y value or leave it empty."),
+                      QStringLiteral("error"));
+            return false;
+        }
+        parsedY = yNumber;
+    }
+
+    QVector<DataPoint> points = m_pointModel.points();
+    points.append({parsedX, parsedY});
+    m_pointModel.setPoints(points);
+    invalidateResults();
+    setStatus(QStringLiteral("Point added to the custom list."), QStringLiteral("success"));
+    return true;
+}
+
+bool AppController::removePoint(int row)
+{
+    QVector<DataPoint> points = m_pointModel.points();
+    if (row < 0 || row >= points.size()) {
+        setStatus(QStringLiteral("The requested row does not exist."), QStringLiteral("error"));
+        return false;
+    }
+
+    points.removeAt(row);
+    m_pointModel.setPoints(points);
+    invalidateResults();
+    setStatus(QStringLiteral("Point removed from the dataset."), QStringLiteral("neutral"));
+    return true;
+}
+
+void AppController::sortPointsByX()
+{
+    QVector<DataPoint> points = m_pointModel.points();
+    if (points.size() < 2) {
+        setStatus(QStringLiteral("At least two points are needed to sort by X."), QStringLiteral("error"));
+        return;
+    }
+
+    std::stable_sort(points.begin(), points.end(), [](const DataPoint &left, const DataPoint &right) {
+        return left.x < right.x;
+    });
+
+    m_pointModel.setPoints(points);
+    invalidateResults();
+    setStatus(QStringLiteral("Points sorted by ascending X."), QStringLiteral("success"));
 }
 
 void AppController::runAnalysis()

@@ -31,6 +31,7 @@ public:
 
     void setPoints(const QVector<DataPoint> &points);
     void clear();
+    bool setXValue(int row, const QString &text, QString *errorMessage = nullptr);
     bool setYValue(int row, const QString &text, QString *errorMessage = nullptr);
 
 signals:
